@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, List, Union, Callable, Optional, Iterable, Any, cast
-from ocfkube.utils.json import shelve
+from transpire.helpers.json import shelve
 
 RESOURCE_APIS = {
     "Deployment": "apps/v1",
