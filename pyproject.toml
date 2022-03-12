@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "transpire"
+version = "0.1.0"
+description = "the OCF Kubernetes helper library"
+authors = ["Nikhil Jha <njha@ocf.berkeley.edu>"]
+license = "LGPL"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+PyYAML = "^6.0"
+kubernetes = "^23.3.0"
+tomlkit = "^0.10.0"
+click = "^8.0.4"
+
+[tool.poetry.dev-dependencies]
+black = {version = "^22.1.0", allow-prereleases = true}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
