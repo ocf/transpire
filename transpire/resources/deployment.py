@@ -3,6 +3,7 @@ from kubernetes import client
 
 
 class Deployment:
+    @staticmethod
     def simple(
         name: str,
         image: str,

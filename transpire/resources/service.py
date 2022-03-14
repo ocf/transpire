@@ -3,6 +3,7 @@ from kubernetes import client
 
 
 class Service:
+    @staticmethod
     def simple(
         name: str,
         selector: dict[str, str],

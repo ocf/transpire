@@ -7,13 +7,17 @@ license = "LGPL"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-PyYAML = "^6.0"
-kubernetes = "^23.3.0"
+PyYAML = "^6.0" # make sure to bump types-PyYAML as well
+kubernetes = "^23.3.0" # make sure to bump kubernetes-typed as well
 tomlkit = "^0.10.0"
 click = "^8.0.4"
+loguru = "^0.6.0"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^22.1.0", allow-prereleases = true}
+mypy = "^0.940"
+types-PyYAML = "^6.0.4"
+kubernetes-typed = { git = "https://github.com/nikhiljha/kubernetes-typed.git", tag = "v23.3.0" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

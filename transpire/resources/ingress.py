@@ -5,6 +5,7 @@ from kubernetes import client
 
 
 class Ingress:
+    @staticmethod
     def simple(
         host: str,
         service_name: str,
