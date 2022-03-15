@@ -1,11 +1,15 @@
 from pathlib import Path
-from typing import List
-from loguru import logger
+from typing import Iterable
 from .postprocessor import postprocess
 import yaml
 
 
-def write_manifests(objects: List[dict], appname: str, manifest_dir: Path):
+def emit(object: Union[dict, Iterable[dict]]):
+    if object is dict:
+        write_manifests([object], "appname", "manifest_dir")
+
+
+def write_manifests(objects: Iterable[dict], appname: str, manifest_dir: Path):
     """Write objects to manifest_dir as YAML files."""
     appdir = manifest_dir / appname
     if appdir.exists():
