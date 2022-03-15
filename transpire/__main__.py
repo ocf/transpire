@@ -18,5 +18,4 @@ cli.add_command(image.commands, "image")
 cli.add_command(obj.commands, "obj")
 
 if __name__ == "__main__":
-    os.environ["BETTER_EXCEPTIONS"] = "1"
     cli()
