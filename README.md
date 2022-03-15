@@ -16,6 +16,6 @@ An opinionated way to do Kubernetes Git-Ops.
   - In the root of each repository, include a `.transpire.py` file that does `import transpire` and generates your desired Kubernetes objects as Python dicts. The transpire library has helper functions for some common objects. Otherwise, you may want to `import kubernetes` for more help. Pass objects to `transpire.emit()` to return them.
   - In the root of each repository, include a `.transpire.toml` file that contains information about what containers to build. Built artifacts will be available to `.transpire.py` via `transpire.artifacts`.
   - To develop, run `transpire dev`. This will generate a `.transpire/objects/` folder with generated configuration and dummy container names.
-- Use `transpire bootstrap` to bootstrap a Kubernetes cluster you've deployed.
+- Use `transpire bootstrap kubernetes` to bootstrap a Kubernetes cluster you've deployed.
   - Uses local `kubectl` credentials to install dependencies (ArgoCD, Cilium, CoreDNS).
   - Points ArgoCD at your cluster repository + automatically runs the first sync.
