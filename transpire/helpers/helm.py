@@ -95,6 +95,35 @@ def build_chart(
     if shutil.which("helm") is None:
         raise RuntimeError("You must install Helm to use this script.")
 
+    # make sure the current user has a place for us to cache stuff
+    home_cache = os.environ.get('XDG_CACHE_HOME', None)
+    if not home_cache:
+        raise EnvironmentError("Could not find an XDG_CACHE_HOME environment variable")
+    cache_dir = os.path.join(home_cache, 'ocf_helm')
+
+    if not os.path.isdir(cache_dir):
+        os.mkdir(cache_dir)
+
+    # if the compressed chart is in our cache and it's of the right version
+    archive_name = f"{name}-{version}.tgz"
+    chart_exists = os.path.isfile(os.path.join(cache_dir, archive_name))
+
+    # if we don't have the chart, download it (as an archive)
+    if not chart_exists:
+        pull_args = [
+            "helm",
+            "pull",
+            "-d", cache_dir,
+            "--version", version,
+            "--repo", repo_url,
+            chart_name
+        ]
+        should_be_empty = run(
+            pull_args, 
+            check=True, 
+            stderr=PIPE,
+        ).stderr
+
     values_file, values_file_name = tempfile.mkstemp(suffix=".yml")
     with open(values_file_name, "w") as f:
         f.write(yaml.dump(values))
@@ -104,10 +133,6 @@ def build_chart(
         "template",
         "-n",
         namespace,
-        "--repo",
-        repo_url,
-        "--version",
-        version,
         "--values",
         values_file_name,
         "--include-crds",
@@ -117,7 +142,7 @@ def build_chart(
         f"ocf-{name}",
         "--api-versions",
         ", ".join(capabilities),
-        chart_name,
+        archive_name,
     ]
     r = run(
         tpl_args,
