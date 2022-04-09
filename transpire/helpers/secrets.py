@@ -26,7 +26,7 @@ def encrypt_value(key: str, value: str) -> str:
 def convert_secret(secret: dict) -> dict:
     """Takes a Kubernetes secret object, encrypts it, returns SyncedSecret object."""
     pub_key = os.environ.get("ARCANUM_PUB_KEY")
-    if pub_key == None:
+    if pub_key is None:
         raise TypeError("ARCANUM_PUB_KEY must be set (got None)")
     if len(pub_key) == 44:
         raise ValueError("ARCANUM_PUB_KEY must be a valid arcanum public key")
