@@ -60,31 +60,3 @@ def push(**kwargs):
 def list(**kwargs):
     """list defined images"""
     raise NotImplementedError("Not yet implemented!")
-
-"""
-[[build]]
-name = "webserver"
-tags = ["v1.0"]
-dockerfile = "Dockerfile"
-
-[[test]]
-name = "e2e_tests"
-dockerfile = "test.Dockerfile"
-depends_on = ["webserver"]
-"""
-{
-    'build': [
-        {
-            'name': 'webserver', 
-            'tags': ['v1.0'], 
-            'dockerfile': 'Dockerfile'
-        }
-    ], 
-    'test': [
-        {
-            'name': 'e2e_tests', 
-            'dockerfile': 'test.Dockerfile', 
-            'depends_on': ['webserver']
-        }
-    ]
-}
