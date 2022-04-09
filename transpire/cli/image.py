@@ -21,7 +21,7 @@ def build(**kwargs):
     remote: str  = kwargs.get('registry', None)
     tags: list = kwargs.get('additional_tags', [])
 
-    # read the dockerfile path, app name, and tags
+    # read the dockerfile path, app name, tags, context
     with open(f".transpire.toml", 'r') as tomlFile:
         config = parse_toml(tomlFile.read())
         
@@ -30,17 +30,20 @@ def build(**kwargs):
         dockerfile: str = f"./{build_data['dockerfile']}"
         name: str = build_data['name']
         tags.extend(build_data['tags'])
+        build_context: str = build_data.get('context', '.')
     
+    # format the remote location to push to
     repo: str = f"{remote}" + (f'/{name}' if name is not None else '')
     
+    # build and push the image to each tag on that remote
     for tag in tags:
         build_dest: str = f"{repo}:{tag}"    
         
         buildArgs = [
             "builtctl", "build",
             "--frontend", "dockerfile.v0",
+            "--local", f"context={build_context}", 
             "--local", f"dockerfile={dockerfile}",
-            "--opt", "",
             "--output", 
                 "type=image," + \
                 f"name={build_dest}," + \
