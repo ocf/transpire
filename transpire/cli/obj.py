@@ -20,7 +20,9 @@ def commands(**kwargs):
 
 
 @commands.command()
-@click.argument("out_path", envvar="TRANSPIRE_OBJECT_OUTPUT", type=click.Path(exists=True))
+@click.argument(
+    "out_path", envvar="TRANSPIRE_OBJECT_OUTPUT", type=click.Path(exists=True)
+)
 def build(out_path, **kwargs):
     """build objects, write them to a folder"""
     get_module().build()
