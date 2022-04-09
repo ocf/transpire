@@ -5,7 +5,7 @@ import shutil
 import tempfile
 from subprocess import PIPE
 from subprocess import run
-from typing import Any
+from typing import Any, Optional
 
 import yaml
 
@@ -72,7 +72,7 @@ def build_chart_from_versions(
     name: str,
     versions: dict[str, Any],
     values: dict,
-    namespace: str = None,
+    namespace: Optional[str] = None,
 ):
     return build_chart(
         repo_url=versions[name]["helm"],
