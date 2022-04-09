@@ -1,4 +1,0 @@
-click
-loguru
-pyyaml
-kubernetes
