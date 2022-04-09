@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Union
+from typing import Optional, Union
 from kubernetes import client
 
 
@@ -10,7 +10,7 @@ class Ingress:
         host: str,
         service_name: str,
         service_port: Union[int, str],
-        ingress_name: str = None,
+        ingress_name: Optional[str] = None,
     ) -> client.V1Ingress:
         return client.V1Ingress(
             api_version="networking.k8s.io/v1",
