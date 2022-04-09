@@ -6,7 +6,9 @@ import importlib.util
 
 def get_module():
     spec = importlib.util.spec_from_file_location("remote_module", ".transpire.py")
+    assert spec is not None
     module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
     spec.loader.exec_module(module)
     return module
 
