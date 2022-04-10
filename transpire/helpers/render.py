@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Union
 from .postprocessor import postprocess
 import yaml
 
