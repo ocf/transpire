@@ -9,7 +9,7 @@ class CIPipeline:
             {
                 "apiVersion": "argoproj.io/v1alpha1",
                 "kind": "EventSource",
-                "metadata": {"name": "webhook"},
+                "metadata": {"name": "github"},
                 "spec": {
                     "service": {"ports": [{"port": 12000, "targetPort": 12000}]},
                     "webhook": {
@@ -32,9 +32,9 @@ class CIPipeline:
                 "template": {"serviceAccountName": "operate-workflow-sa"},
                 "dependencies": [
                     {
-                        "name": "test-dep",
-                        "eventSourceName": "webhook",
-                        "eventName": "example",
+                        "name": "github",
+                        "eventSourceName": "github",
+                        "eventName": "github",
                         "filters": {
                             "dataLogicalOperator": "and",
                             "data": [
@@ -47,8 +47,8 @@ class CIPipeline:
                                     "path": "pusher.email",
                                     "type": "string",
                                     "comparator": "!=",
-                                    "value": "1-800-NOT-A-REAL-EMAIL@example.com",
-                                }
+                                    "value": "1-800-NOT-A-REAL-EMAIL@woah@example.com",
+                                },
                             ],
                         },
                     }
@@ -64,21 +64,34 @@ class CIPipeline:
                                         "apiVersion": "argoproj.io/v1alpha1",
                                         "kind": "Workflow",
                                         "metadata": {
-                                            "generateName": "cluster-workflow-template-hello-world-"
+                                            "generateName": "transpire-build-"
                                         },
                                         "spec": {
-                                            "entrypoint": "whalesay-template",
+                                            "entrypoint": "main",
                                             "arguments": {
                                                 "parameters": [
                                                     {
-                                                        "name": "message",
-                                                        "value": "hello world",
-                                                    }
+                                                        "name": "source-repo",
+                                                        "value": "https://github.com/ocf/templates",
+                                                    },
+                                                    {
+                                                        "name": "source-branch",
+                                                        "value": "main",
+                                                    },
+                                                    {"name": "path", "value": ""},
+                                                    {
+                                                        "name": "cluster-repo",
+                                                        "value": "https://github.com/ocf/cluster",
+                                                    },
+                                                    {
+                                                        "name": "cluster-branch",
+                                                        "value": "main",
+                                                    },
                                                 ]
                                             },
                                             "workflowTemplateRef": {
-                                                "name": "cluster-workflow-template-whalesay-template",
-                                                "clusterScope": True,
+                                                "name": "transpire-remote-build",
+                                                "clusterScope": False,
                                             },
                                         },
                                     }
@@ -86,11 +99,18 @@ class CIPipeline:
                                 "parameters": [
                                     {
                                         "src": {
-                                            "dependencyName": "test-dep",
-                                            "dataKey": "body",
+                                            "dependencyName": "github",
+                                            "dataKey": "body.clone_url",
                                         },
                                         "dest": "spec.arguments.parameters.0.value",
-                                    }
+                                    },
+                                    {
+                                        "src": {
+                                            "dependencyName": "github",
+                                            "dataKey": "body.after",
+                                        },
+                                        "dest": "spec.arguments.parameters.1.value",
+                                    },
                                 ],
                             },
                         }
