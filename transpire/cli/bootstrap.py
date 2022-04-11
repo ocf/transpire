@@ -53,4 +53,6 @@ def repository(path, force, **kwargs):
             """
         )
     )
-    logger.info(f"Successfully initialized transpire app repository in {path.resolve().name}.")
+    logger.info(
+        f"Successfully initialized transpire app repository in {path.resolve().name}."
+    )
