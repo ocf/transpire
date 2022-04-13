@@ -25,7 +25,7 @@ def build(push, **kwargs):
     remote: str = kwargs.get('remote', None)
     tags: List[str] = kwargs.get('additional_tags', [])
 
-    if push and remote is None:
+    if (push is None) and (remote is None):
         raise ValueError(f"Argument remote cannot be None when --push is set")
 
     # read the dockerfile path, app name, tags, context
