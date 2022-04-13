@@ -19,8 +19,7 @@ capabilities = [
     "admissionregistration.k8s.io/v1",
     "admissionregistration.k8s.io/v1beta1",
     "apiextensions.k8s.io/v1",
-    "apiextensions.k8s.io/v1beta1",
-    "apiregistration.k8s.io/v1",
+    "apiextensions.k8s.io/v1beta1", "apiregistration.k8s.io/v1",
     "apiregistration.k8s.io/v1beta1",
     "apps/v1",
     "argoproj.io/v1alpha1",
@@ -155,7 +154,7 @@ def build_chart(
         f"ocf-{name}",
         "--api-versions",
         ", ".join(capabilities),
-        archive_name,
+        os.path.join(chart_dir, archive_name),
     ]
     r = run(
         tpl_args,
