@@ -110,6 +110,8 @@ def build_chart(
         os.mkdir(cache_dir)
 
     chart_dir: str = os.path.join(cache_dir, "charts")
+    if not os.path.isdir(chart_dir):
+        os.mkdir(chart_dir)
 
     # if the compressed chart is in our cache and it's of the right version
     archive_name: str = f"{name}-{version}.tgz"
