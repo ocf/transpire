@@ -19,7 +19,8 @@ capabilities = [
     "admissionregistration.k8s.io/v1",
     "admissionregistration.k8s.io/v1beta1",
     "apiextensions.k8s.io/v1",
-    "apiextensions.k8s.io/v1beta1", "apiregistration.k8s.io/v1",
+    "apiextensions.k8s.io/v1beta1",
+    "apiregistration.k8s.io/v1",
     "apiregistration.k8s.io/v1beta1",
     "apps/v1",
     "argoproj.io/v1alpha1",
@@ -121,14 +122,17 @@ def build_chart(
         pull_args: List[str] = [
             "helm",
             "pull",
-            "-d", chart_dir,
-            "--version", version,
-            "--repo", repo_url,
-            chart_name
+            "-d",
+            chart_dir,
+            "--version",
+            version,
+            "--repo",
+            repo_url,
+            chart_name,
         ]
         should_be_empty: bytes = run(
-            pull_args, 
-            check=True, 
+            pull_args,
+            check=True,
             stderr=PIPE,
         ).stderr
 

@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, List, Union, Callable, Optional, Iterable, Any, cast
-from transpire.helpers.json import shelve
+from transpire.internal.json import shelve
 
 RESOURCE_APIS = {
     "Deployment": "apps/v1",

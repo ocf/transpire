@@ -3,7 +3,8 @@ from contextvars import ContextVar
 from shutil import rmtree
 from typing import Callable, Iterable, Union
 from typing_extensions import Protocol
-from .postprocessor import postprocess
+from transpire.internal.postprocessor import postprocess
+from loguru import logger
 import yaml
 
 
@@ -56,7 +57,9 @@ def write_manifests(objects: Iterable[dict], appname: str, manifest_dir: Path):
     appdir.mkdir(exist_ok=True)
     for obj in objects:
         if obj is None:
-            # TODO: Log message with warning
+            logger.warn(
+                "Got a None object as a Kubernetes manifest, did something fail to build?"
+            )
             continue
         obj = postprocess(obj, dev=False)
         name = obj["metadata"].get("name", obj["metadata"].get("generateName", None))
