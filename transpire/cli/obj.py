@@ -1,7 +1,7 @@
 from contextvars import Context
 from importlib import resources
 from typing import Iterable, List
-from transpire.helpers import render
+from transpire.internal import render
 import click
 import importlib.util
 import yaml

@@ -121,14 +121,17 @@ def build_chart(
         pull_args: List[str] = [
             "helm",
             "pull",
-            "-d", chart_dir,
-            "--version", version,
-            "--repo", repo_url,
-            chart_name
+            "-d",
+            chart_dir,
+            "--version",
+            version,
+            "--repo",
+            repo_url,
+            chart_name,
         ]
         should_be_empty: bytes = run(
-            pull_args, 
-            check=True, 
+            pull_args,
+            check=True,
             stderr=PIPE,
         ).stderr
 

@@ -1,4 +1,4 @@
-from transpire.helpers.secrets import convert_secret
+from transpire.internal.secrets import convert_secret
 
 
 def postprocess(obj: dict, dev: bool = True):
