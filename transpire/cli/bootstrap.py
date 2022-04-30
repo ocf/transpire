@@ -1,5 +1,6 @@
-from pathlib import Path
 import textwrap
+from pathlib import Path
+
 import click
 from loguru import logger
 
@@ -36,7 +37,7 @@ def repository(path, force, **kwargs):
             """
             from transpire import emit
             from transpire import resources
-            
+
             # TODO: Replace me with the configuration for this app!
             def build():
                 deployment = resources.Deployment.simple("echoserver", "k8s.gcr.io/echoserver", "8080")

@@ -3,12 +3,14 @@ from __future__ import annotations
 import os
 import shutil
 import tempfile
-from textwrap import indent
-from subprocess import PIPE
-from subprocess import run
-from typing import Any, List, Optional
+from subprocess import PIPE, run
+from typing import Any
 
 import yaml
+
+from transpire.internal.appctx import get_current_namespace
+
+__all__ = ["build_chart_from_versions", "build_chart"]
 
 # TODO: This is hardcoded, but we can grab it from the k8s API instead.
 capabilities = [
@@ -73,13 +75,11 @@ def build_chart_from_versions(
     name: str,
     versions: dict[str, Any],
     values: dict,
-    namespace: Optional[str] = None,
 ):
     return build_chart(
         repo_url=versions[name]["helm"],
         chart_name=versions[name].get("chart", name),
         name=name,
-        namespace=namespace or name,
         version=versions[name]["version"],
         values=values,
     )
@@ -89,56 +89,23 @@ def build_chart(
     repo_url: str,
     chart_name: str,
     name: str,
-    namespace: str,
     version: str,
     values: dict,
 ) -> list:
     if shutil.which("helm") is None:
         raise RuntimeError("You must install Helm to use this script.")
 
-    # make sure the current user has a place for us to cache stuff
-    if (cache_dir := os.environ.get("TRANSPIRE_CACHE_DIR", None)) is not None:
-        pass
-    elif (cache_dir := os.environ.get("XDG_CACHE_HOME", None)) is not None:
-        cache_dir = os.path.join(cache_dir, "transpire")
-    elif (cache_dir := os.environ.get("HOME", None)) is not None:
-        cache_dir = os.path.join(cache_dir, ".cache", "transpire")
-    else:
-        cache_dir = os.path.join("/tmp", "transpire")
-
-    if not os.path.isdir(cache_dir):
-        os.mkdir(cache_dir)
-
-    chart_dir: str = os.path.join(cache_dir, "charts")
-    if not os.path.isdir(chart_dir):
-        os.mkdir(chart_dir)
-
-    # if the compressed chart is in our cache and it's of the right version
-    archive_name: str = f"{name}-{version}.tgz"
-    chart_exists: bool = os.path.isfile(os.path.join(chart_dir, archive_name))
-
-    # if we don't have the chart, download it (as an archive)
-    if not chart_exists:
-        pull_args: List[str] = [
+    # Add the helm repository w/ chart name = repo name.
+    run(
+        [
             "helm",
-            "pull",
-            "-d",
-            chart_dir,
-            "--version",
-            version,
-            "--repo",
-            repo_url,
+            "repo",
+            "add",
             chart_name,
-        ]
-        should_be_empty: bytes = run(
-            pull_args,
-            check=True,
-            stderr=PIPE,
-        ).stderr
-
-        if len(should_be_empty) > 0:
-            err_msg: str = indent(str(should_be_empty), "  ")
-            raise RuntimeError(f"Error when downloading chart archive: \n{err_msg}")
+            repo_url,
+        ],
+        check=True,
+    )
 
     values_file, values_file_name = tempfile.mkstemp(suffix=".yml")
     with open(values_file_name, "w") as f:
@@ -148,17 +115,17 @@ def build_chart(
         "helm",
         "template",
         "-n",
-        namespace,
+        get_current_namespace(),
         "--values",
         values_file_name,
         "--include-crds",
+        "--version",
+        version,
         "--name-template",
-        # the helm release name
-        # sometimes used in resource names
-        f"ocf-{name}",
+        name,
         "--api-versions",
         ", ".join(capabilities),
-        os.path.join(chart_dir, archive_name),
+        f"{chart_name}/{chart_name}",
     ]
     r = run(
         tpl_args,

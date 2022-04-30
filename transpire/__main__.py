@@ -1,10 +1,6 @@
 import click
-import os
 
-from .cli import bootstrap
-from .cli import dev
-from .cli import image
-from .cli import obj
+from .cli import bootstrap, dev, image, obj
 
 
 @click.group()

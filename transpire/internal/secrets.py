@@ -1,7 +1,6 @@
 import base64
-import subprocess
 import os
-from typing import Tuple
+import subprocess
 
 
 def fix_base64(pairs: dict) -> dict:

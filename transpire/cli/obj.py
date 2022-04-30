@@ -1,11 +1,14 @@
-from contextvars import Context
-from importlib import resources
-from typing import Iterable, List
-from transpire.internal import render
-import click
 import importlib.util
-import yaml
 import sys
+from collections import defaultdict
+from contextvars import Context
+from typing import Iterable, List, Optional
+
+import click
+import yaml
+
+from transpire.internal import render
+from transpire.internal.appctx import get_app_name
 
 
 def get_module():
@@ -17,12 +20,11 @@ def get_module():
     return module
 
 
-def build_to_list() -> List[dict]:
-    manifests: List[dict] = []
+def build_to_lists() -> dict[str, List[dict]]:
+    manifests: dict[str, List[dict]] = defaultdict(list)
 
     def emit_backend(objs: Iterable[dict]):
-        nonlocal manifests
-        manifests.extend(objs)
+        manifests[get_app_name()].extend(objs)
 
     def go():
         render._emit_backend.set(emit_backend)
@@ -42,19 +44,27 @@ def commands(**kwargs):
 
 @commands.command()
 @click.argument("out_path", envvar="TRANSPIRE_OBJECT_OUTPUT", type=click.Path())
-@click.argument("app_name", envvar="TRANSPIRE_APP_NAME", type=str)  # TODO: validate
-def build(out_path, app_name, **kwargs):
+def build(out_path, **kwargs):
     """build objects, write them to a folder"""
-    manifests = build_to_list()
+    apps_manifests = build_to_lists()
 
-    render.write_manifests(manifests, app_name, out_path)
+    for app_name, manifests in apps_manifests:
+        # TODO: Create ArgoCD application.
+        render.write_manifests(manifests, app_name, out_path)
 
 
 @commands.command()
-def list(**kwargs):
+@click.argument("app_name", required=False)
+def list(app_name: Optional[str] = None, **kwargs):
     """build objects, pretty-list them to stdout"""
-    manifests = build_to_list()
-    yaml.safe_dump_all(manifests, sys.stdout)
+    apps_manifests = build_to_lists()
+    if app_name is None:
+        keys: List[str] = list(apps_manifests.keys())
+        if len(keys) == 1:
+            app_name = keys[0]
+        else:
+            raise ValueError("Need app_name")
+    yaml.safe_dump_all(apps_manifests[app_name], sys.stdout)
 
 
 @commands.command()

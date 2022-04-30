@@ -1,8 +1,12 @@
-import click
+from pathlib import Path
 from shutil import which as shutil_which
-from tomlkit import parse as parse_toml
-from subprocess import run, PIPE
+from subprocess import PIPE, run
 from typing import List
+
+import click
+import tomlkit
+
+from transpire.internal.config import Config
 
 
 @click.group()
@@ -27,11 +31,12 @@ def build(push, **kwargs):
     tags: List[str] = kwargs.get("additional_tags", [])
 
     if (push is None) and (remote is None):
-        raise ValueError(f"Argument remote cannot be None when --push is set")
+        raise ValueError("Argument remote cannot be None when --push is set")
 
     # read the dockerfile path, app name, tags, context
-    with open(f".transpire.toml", "r") as tomlFile:
-        config = parse_toml(tomlFile.read())
+    config: Config = Config.parse_obj(
+        tomlkit.loads(Path(".transpire.toml").read_text())
+    )
 
     build_output: List[bytes] = []
     for build_data in config["build"]:
@@ -60,7 +65,9 @@ def build(push, **kwargs):
                 "--local",
                 f"dockerfile={dockerfile}",
                 "--output",
-                "type=image," + f"name={build_dest}," + f"push={'true' if push else 'false'}",
+                "type=image,"
+                + f"name={build_dest},"
+                + f"push={'true' if push else 'false'}",
             ]
 
             build_output.append(run(build_args, check=True, stdout=PIPE).stdout)

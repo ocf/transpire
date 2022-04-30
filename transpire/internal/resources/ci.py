@@ -1,10 +1,12 @@
 from typing import List
 
+
 # We don't use the argo pyhton library because it doesn't typecheck anyway.
 # The way it checks types is by calling _check_types(), which my IDE doesn't understand
 # and I figure if I'm going to have to google anything anyway I'll just write a plain dict.
 class CIPipeline:
-    def event_source(self, url: str) -> List[dict]:
+    @staticmethod
+    def event_source(url: str) -> List[dict]:
         return [
             {
                 "apiVersion": "argoproj.io/v1alpha1",
@@ -23,7 +25,8 @@ class CIPipeline:
             }
         ]
 
-    def sensor(self, name: str, repo: str) -> dict:
+    @staticmethod
+    def sensor(name: str, repo: str) -> dict:
         return {
             "apiVersion": "argoproj.io/v1alpha1",
             "kind": "Sensor",

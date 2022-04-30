@@ -5,6 +5,9 @@ description = "the OCF Kubernetes helper library"
 authors = ["Nikhil Jha <njha@ocf.berkeley.edu>"]
 license = "LGPL"
 
+[tool.poetry.scripts]
+transpire = 'transpire.__main__:cli'
+
 [tool.poetry.dependencies]
 python = "^3.10"
 PyYAML = "^6.0" # make sure to bump types-PyYAML as well
@@ -14,13 +17,20 @@ click = "^8.0.4"
 loguru = "^0.6.0"
 better-exceptions = "^0.3.3"
 inquirer = "^2.9.1"
+pydantic = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^22.1.0", allow-prereleases = true}
 mypy = "^0.940"
 types-PyYAML = "^6.0.4"
 kubernetes-typed = { git = "https://github.com/nikhiljha/kubernetes-typed.git", tag = "v23.3.0" }
+types-requests = "^2.27.19"
+flake8 = "^4.0.1"
+isort = "^5.10.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
