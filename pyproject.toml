@@ -27,6 +27,9 @@ kubernetes-typed = { git = "https://github.com/nikhiljha/kubernetes-typed.git", 
 types-requests = "^2.27.19"
 flake8 = "^4.0.1"
 isort = "^5.10.1"
+pre-commit = "^2.18.1"
+pytest = "^7.1.2"
+coverage = { version = "^6.3.2", extras = ["toml"] }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -34,3 +37,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
+
+[tool.coverage.run]
+source = ["transpire"]
+branch = true
