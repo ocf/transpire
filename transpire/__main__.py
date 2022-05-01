@@ -4,7 +4,7 @@ from .cli import bootstrap, dev, image, obj
 
 
 @click.group()
-def cli():
+def cli() -> None:
     pass
 
 

@@ -33,7 +33,7 @@ def _coerce_dict(obj: ManifestLike) -> dict:
     raise TypeError("unsupported manifest type")
 
 
-def emit(objs: Union[ManifestLike, Iterable[ManifestLike]]):
+def emit(objs: Union[ManifestLike, Iterable[ManifestLike]]) -> None:
     try:
         backend = _emit_backend.get()
     except LookupError:
@@ -51,7 +51,7 @@ def emit(objs: Union[ManifestLike, Iterable[ManifestLike]]):
     backend(_coerce_dict(o) for o in objs_iter)
 
 
-def write_manifests(objects: Iterable[dict], appname: str, manifest_dir: Path):
+def write_manifests(objects: Iterable[dict], appname: str, manifest_dir: Path) -> None:
     """Write objects to manifest_dir as YAML files."""
     appdir = manifest_dir / appname
     if appdir.exists():

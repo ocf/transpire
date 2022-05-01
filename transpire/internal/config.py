@@ -15,6 +15,9 @@ class Build(BaseModel):
     output: Optional[str] = Field(
         description="The output image, tagged by hash, e.x. 'harbor.ocf.berkeley.edu/{reponame}/{name}@sha256:0ecb2ad60'"
     )
+    context: str = Field(
+        description="The build context for the image build", default="."
+    )
 
 
 class Test(BaseModel):

@@ -10,14 +10,14 @@ from transpire.internal.config import Config
 
 
 @click.group()
-def commands(**kwargs):
+def commands(**kwargs) -> None:
     """tools related to images (.transpire.toml)"""
     pass
 
 
 @commands.command()
 @click.option("--push/--no-push", default=False)
-def build(push, **kwargs):
+def build(push, **kwargs) -> None:
     """build defined images"""
     # must be passed kwarg `remote` if --push is set
     # tags not in .transpire.toml are passed through kwarg `additional_tags`
@@ -39,15 +39,14 @@ def build(push, **kwargs):
     )
 
     build_output: List[bytes] = []
-    for build_data in config["build"]:
+    for build_data in config.build:
 
-        dockerfile: str = f"./{build_data['dockerfile']}"
-        name: str = build_data["name"]
-        tags.extend(build_data["tags"])
-        build_context: str = build_data.get("context", ".")
+        tags.extend(build_data.tags or [])
 
         # format the remote location to push to: "{remote}", "{remote}/{name}" or "{name}"
-        repo: str = "/".join(filter(lambda arg: arg is not None, [remote, name]))
+        repo: str = "/".join(
+            filter(lambda arg: arg is not None, [remote, build_data.name])
+        )
         if len(repo) < 1:
             raise Exception(f"Build target has no identifier: \n{build_data}")
 
@@ -61,9 +60,9 @@ def build(push, **kwargs):
                 "--frontend",
                 "dockerfile.v0",
                 "--local",
-                f"context={build_context}",
+                f"context={build_data.context}",
                 "--local",
-                f"dockerfile={dockerfile}",
+                f"dockerfile=./{build_data.dockerfile}",
                 "--output",
                 "type=image,"
                 + f"name={build_dest},"
@@ -74,12 +73,12 @@ def build(push, **kwargs):
 
 
 @commands.command()
-def push(**kwargs):
+def push(**kwargs) -> None:
     """push defined images"""
     raise NotImplementedError("Not yet implemented!")
 
 
-@commands.command()
-def list(**kwargs):
+@commands.command("list")
+def list_images(**kwargs) -> None:
     """list defined images"""
     raise NotImplementedError("Not yet implemented!")

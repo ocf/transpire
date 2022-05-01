@@ -16,9 +16,9 @@ def with_app_name(
 ) -> T:
     ctx = copy_context()
 
-    def go():
+    def go() -> T:
         set_app_name(name)
-        func(*args, **kwargs)
+        return func(*args, **kwargs)
 
     return ctx.run(go)
 

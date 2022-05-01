@@ -2,6 +2,7 @@ import importlib.util
 import sys
 from collections import defaultdict
 from contextvars import Context
+from types import ModuleType
 from typing import Iterable, List, Optional
 
 import click
@@ -9,9 +10,10 @@ import yaml
 
 from transpire.internal import render
 from transpire.internal.appctx import get_app_name
+from transpire.internal.argocd import make_app
 
 
-def get_module():
+def get_module() -> ModuleType:
     spec = importlib.util.spec_from_file_location("remote_module", ".transpire.py")
     assert spec is not None
     module = importlib.util.module_from_spec(spec)
@@ -37,25 +39,25 @@ def build_to_lists() -> dict[str, List[dict]]:
 
 
 @click.group()
-def commands(**kwargs):
+def commands(**kwargs) -> None:
     """tools related to Kubernetes objects (.transpire.py)"""
     pass
 
 
 @commands.command()
 @click.argument("out_path", envvar="TRANSPIRE_OBJECT_OUTPUT", type=click.Path())
-def build(out_path, **kwargs):
+def build(out_path, **kwargs) -> None:
     """build objects, write them to a folder"""
     apps_manifests = build_to_lists()
 
-    for app_name, manifests in apps_manifests:
-        # TODO: Create ArgoCD application.
+    for app_name, manifests in apps_manifests.items():
+        make_app(app_name)
         render.write_manifests(manifests, app_name, out_path)
 
 
-@commands.command()
+@commands.command("list")
 @click.argument("app_name", required=False)
-def list(app_name: Optional[str] = None, **kwargs):
+def list_manifests(app_name: Optional[str] = None, **kwargs) -> None:
     """build objects, pretty-list them to stdout"""
     apps_manifests = build_to_lists()
     if app_name is None:
@@ -68,6 +70,6 @@ def list(app_name: Optional[str] = None, **kwargs):
 
 
 @commands.command()
-def apply(**kwargs):
+def apply(**kwargs) -> None:
     """build objects, apply them to current kubernetes context"""
     raise NotImplementedError("Not yet implemented!")

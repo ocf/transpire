@@ -75,7 +75,7 @@ def build_chart_from_versions(
     name: str,
     versions: dict[str, Any],
     values: dict,
-):
+) -> list:
     return build_chart(
         repo_url=versions[name]["helm"],
         chart_name=versions[name].get("chart", name),

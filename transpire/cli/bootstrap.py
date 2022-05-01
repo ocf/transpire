@@ -20,7 +20,7 @@ def kubernetes(**kwargs):
 @commands.command()
 @click.argument("path", type=click.Path(exists=True), default=".", required=False)
 @click.option("-f", "--force", is_flag=True)
-def repository(path, force, **kwargs):
+def repository(path, force, **kwargs) -> None:
     """initializes current working directory to be a transpire app repository"""
     path = Path(path)
     transpire_py = path / ".transpire.py"
