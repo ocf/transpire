@@ -9,8 +9,8 @@ import click
 import yaml
 
 from transpire.internal import render
-from transpire.internal.appctx import get_app_name
 from transpire.internal.argocd import make_app
+from transpire.internal.context import get_app_name
 
 
 def get_module() -> ModuleType:

@@ -1,43 +1,65 @@
+import os
+from functools import cache
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
 
-class Build(BaseModel):
-    """A Build represents an OCI image that has been or should be built."""
+def first_env(*args: str, default: Optional[str] = None) -> str:
+    """
+    try all environment variables in order, returning the first one that's set
 
-    name: str = Field(description='The name of the image to build, e.x. "webserver".')
-    tags: Optional[List[str]] = Field(
-        description="Additional tags that should be applied to this image."
+    >>> import os
+    >>> os.environ["VAR_THAT_EXISTS"] = "this exists!"
+    >>> first_env("THIS_DOESNT_EXIST", "THIS_DOESNT_EITHER", "VAR_THAT_EXISTS")
+    "this exists!"
+    >>> first_env("THIS_DOESNT_EXIST", default="foo")
+    "foo"
+    """
+
+    if len(args) == 0:
+        if default is None:
+            raise KeyError(
+                "Unable to pull from environment, and no default was provided."
+            )
+        return default
+    return os.environ.get(args[0], first_env(*args[1:], default=default))
+
+
+class CLIConfig(BaseModel):
+    """Configuration information for the transpire CLI tool."""
+
+    cache_dir: Path = Field(description="The directory where cached files are stored")
+    config_dir: Path = Field(
+        description="The directory where transpire should write its persistent config files"
     )
-    dockerfile: Path = Field(description="Full path to a Dockerfile to build.")
-    output: Optional[str] = Field(
-        description="The output image, tagged by hash, e.x. 'harbor.ocf.berkeley.edu/{reponame}/{name}@sha256:0ecb2ad60'"
-    )
-    context: str = Field(
-        description="The build context for the image build", default="."
-    )
 
+    @classmethod
+    @cache
+    def from_env(cls) -> "CLIConfig":
+        """pull configuration from environment variables, falling back to defaults as neccesary"""
+        # TRANSPIRE_CACHE_DIR > XDG_CACHE_HOME > ~/.cache/
+        cache_dir = (
+            Path(
+                first_env(
+                    "TRANSPIRE_CACHE_DIR",
+                    "XDG_CACHE_HOME",
+                    default="~/.cache",
+                )
+            ).expanduser()
+            / "transpire"
+        )
 
-class Test(BaseModel):
-    """A Test represents an OCI image that runs tests."""
-
-    name: Optional[str] = Field(
-        description="The name of the test to build (currently unused)"
-    )
-    depends_on: List[str] = Field(description="The images that this test depends on.")
-    dockerfile: Path = Field(
-        description="The name of the test to build (currently unused)"
-    )
-
-
-class Config(BaseModel):
-    """Config represents a transpire configuration object, for CI."""
-
-    build: List[Build] = Field(description="A list of Builds.")
-    test: List[Test] = Field(description="A list of Tests.")
-
-
-def parse(str) -> Config:
-    ...
+        # TRANSPIRE_CONFIG_DIR > XDG_CONFIG_HOME > ~/.config/
+        config_dir = (
+            Path(
+                first_env(
+                    "TRANSPIRE_CONFIG_DIR",
+                    "XDG_CONFIG_HOME",
+                    default="~/.config",
+                )
+            ).expanduser()
+            / "transpire"
+        )
+        return cls(cache_dir=cache_dir, config_dir=config_dir)

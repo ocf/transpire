@@ -4,85 +4,51 @@ import os
 import shutil
 import tempfile
 from subprocess import PIPE, run
-from typing import Any
+from typing import Any, List, Tuple
 
 import yaml
 
-from transpire.internal.appctx import get_current_namespace
+from transpire.internal.config import CLIConfig
+from transpire.internal.context import get_current_namespace
 
 __all__ = ["build_chart_from_versions", "build_chart"]
 
-# TODO: This is hardcoded, but we can grab it from the k8s API instead.
-capabilities = [
-    "acme.cert-manager.io/v1",
-    "acme.cert-manager.io/v1alpha2",
-    "acme.cert-manager.io/v1alpha3",
-    "acme.cert-manager.io/v1beta1",
-    "admissionregistration.k8s.io/v1",
-    "admissionregistration.k8s.io/v1beta1",
-    "apiextensions.k8s.io/v1",
-    "apiextensions.k8s.io/v1beta1",
-    "apiregistration.k8s.io/v1",
-    "apiregistration.k8s.io/v1beta1",
-    "apps/v1",
-    "argoproj.io/v1alpha1",
-    "authentication.k8s.io/v1",
-    "authentication.k8s.io/v1beta1",
-    "authorization.k8s.io/v1",
-    "authorization.k8s.io/v1beta1",
-    "autoscaling/v1",
-    "autoscaling/v2beta1",
-    "autoscaling/v2beta2",
-    "batch/v1",
-    "batch/v1beta1",
-    "ceph.rook.io/v1",
-    "cert-manager.io/v1",
-    "cert-manager.io/v1alpha2",
-    "cert-manager.io/v1alpha3",
-    "cert-manager.io/v1beta1",
-    "certificates.k8s.io/v1",
-    "certificates.k8s.io/v1beta1",
-    "cilium.io/v2",
-    "coordination.k8s.io/v1",
-    "coordination.k8s.io/v1beta1",
-    "discovery.k8s.io/v1beta1",
-    "events.k8s.io/v1",
-    "events.k8s.io/v1beta1",
-    "extensions/v1beta1",
-    "fission.io/v1",
-    "keycloak.org/v1alpha1",
-    "networking.k8s.io/v1",
-    "networking.k8s.io/v1beta1",
-    "node.k8s.io/v1beta1",
-    "objectbucket.io/v1alpha1",
-    "ocf.io/v1",
-    "policy/v1beta1",
-    "projectcontour.io/v1",
-    "projectcontour.io/v1alpha1",
-    "rbac.authorization.k8s.io/v1",
-    "rbac.authorization.k8s.io/v1beta1",
-    "ricoberger.de/v1alpha1",
-    "rook.io/v1alpha2",
-    "scheduling.k8s.io/v1",
-    "scheduling.k8s.io/v1beta1",
-    "storage.k8s.io/v1",
-    "storage.k8s.io/v1beta1",
-    "v1",
-]
+
+def assert_helm() -> None:
+    """ensure helm binary is available"""
+
+    if shutil.which("helm") is None:
+        raise RuntimeError("`helm` must be installed and in your $PATH")
 
 
-def build_chart_from_versions(
-    name: str,
-    versions: dict[str, Any],
-    values: dict,
-) -> list:
-    return build_chart(
-        repo_url=versions[name]["helm"],
-        chart_name=versions[name].get("chart", name),
-        name=name,
-        version=versions[name]["version"],
-        values=values,
+def exec_helm(args: List[str], check: bool = True) -> Tuple[bytes, bytes]:
+    """executes a helm command and returns (stdout, stderr)"""
+
+    config = CLIConfig.from_env()
+    process = run(
+        [
+            "helm",
+            "--registry-config",
+            config.cache_dir / "helm" / "registry.json",
+            "--repository-cache",
+            config.cache_dir / "helm" / "repository",
+            "--repository-config",
+            config.cache_dir / "helm" / "repositories.yaml",
+            *args,
+        ],
+        check=check,
+        stdout=PIPE,
+        stderr=PIPE,
     )
+
+    return (process.stdout, process.stderr)
+
+
+def add_repo(name: str, url: str) -> None:
+    """add a repository to transpire's Helm repository list"""
+
+    assert_helm()
+    exec_helm(["repo", "add", name, url], check=True)
 
 
 def build_chart(
@@ -90,48 +56,56 @@ def build_chart(
     chart_name: str,
     name: str,
     version: str,
-    values: dict,
-) -> list:
-    if shutil.which("helm") is None:
-        raise RuntimeError("You must install Helm to use this script.")
+    values: dict = {},
+    capabilities: List[str] = [],
+) -> List[dict]:
+    """build a helm chart and return a list of manifests"""
 
-    # Add the helm repository w/ chart name = repo name.
-    run(
-        [
-            "helm",
-            "repo",
-            "add",
-            chart_name,
-            repo_url,
-        ],
-        check=True,
-    )
+    add_repo(name, repo_url)
 
     values_file, values_file_name = tempfile.mkstemp(suffix=".yml")
     with open(values_file_name, "w") as f:
         f.write(yaml.dump(values))
 
-    tpl_args = [
-        "helm",
-        "template",
-        "-n",
-        get_current_namespace(),
-        "--values",
-        values_file_name,
-        "--include-crds",
-        "--version",
-        version,
-        "--name-template",
-        name,
-        "--api-versions",
-        ", ".join(capabilities),
-        f"{chart_name}/{chart_name}",
-    ]
-    r = run(
-        tpl_args,
+    capabilities_flag = []
+    if len(capabilities) > 0:
+        capabilities_flag = ["--api-versions", ", ".join(capabilities)]
+
+    # TODO: Capture `stderr` output and make available to tracing.
+    stdout, _ = exec_helm(
+        [
+            "template",
+            "-n",
+            get_current_namespace(),
+            "--values",
+            values_file_name,
+            "--include-crds",
+            "--version",
+            version,
+            "--name-template",
+            name,
+            *capabilities_flag,
+            f"{chart_name}/{chart_name}",
+        ],
         check=True,
-        stdout=PIPE,
-    ).stdout
+    )
 
     os.close(values_file)
-    return list(yaml.safe_load_all(r))
+    os.unlink(values_file_name)
+    return list(yaml.safe_load_all(stdout))
+
+
+def build_chart_from_versions(
+    name: str,
+    versions: dict[str, Any],
+    values: dict = {},
+) -> list:
+    """thin wrapper around build_chart that builds based off a versions dict"""
+
+    return build_chart(
+        repo_url=versions[name]["helm"],
+        chart_name=versions[name].get("chart", name),
+        name=name,
+        version=versions[name]["version"],
+        values=values,
+    )

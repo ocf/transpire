@@ -1,5 +1,5 @@
 # DSL Re-exports (Stable API)
-from transpire.internal.appctx import (
+from transpire.internal.context import (
     get_app_name,
     get_current_namespace,
     set_app_name,
