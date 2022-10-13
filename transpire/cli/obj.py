@@ -1,36 +1,26 @@
-import importlib.util
 import sys
-from collections import defaultdict
 from contextvars import Context
-from types import ModuleType
 from typing import Iterable, List, Optional
 
 import click
 import yaml
 
-from transpire.internal import render
+from transpire.internal import render, context
 from transpire.internal.argocd import make_app
 from transpire.internal.context import get_app_name
+from transpire.internal.config import ClusterConfig, ModuleConfig
 
 
-def get_module() -> ModuleType:
-    spec = importlib.util.spec_from_file_location("remote_module", ".transpire.py")
-    assert spec is not None
-    module = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
-    spec.loader.exec_module(module)
-    return module
-
-
-def build_to_lists() -> dict[str, List[dict]]:
-    manifests: dict[str, List[dict]] = defaultdict(list)
+def build_to_lists(module_name: str, module_config: ModuleConfig) -> list[dict]:
+    manifests: list[dict] = list()
 
     def emit_backend(objs: Iterable[dict]):
         manifests[get_app_name()].extend(objs)
 
     def go():
         render._emit_backend.set(emit_backend)
-        get_module().build()
+        context._current_app.set(module_name)
+        module_config.load_py_module().objects()
 
     ctx = Context()
     ctx.run(go)
@@ -55,10 +45,18 @@ def build(out_path, **kwargs) -> None:
         render.write_manifests(manifests, app_name, out_path)
 
 
-@commands.command("list")
+@commands.command("print")
 @click.argument("app_name", required=False)
 def list_manifests(app_name: Optional[str] = None, **kwargs) -> None:
     """build objects, pretty-list them to stdout"""
+    if app_name:
+        config = ClusterConfig.from_cwd()
+        module = config.modules.get(app_name)
+        if not module:
+            raise ModuleNotFoundError(f"Couldn't find {app_name} in cluster.toml.")
+    else:
+        raise NotImplementedError("Need to get the module from the cwd...")
+
     apps_manifests = build_to_lists()
     if app_name is None:
         keys: List[str] = list(apps_manifests.keys())
