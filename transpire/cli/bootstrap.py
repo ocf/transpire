@@ -24,9 +24,8 @@ def repository(path, force, **kwargs) -> None:
     """initializes current working directory to be a transpire app repository"""
     path = Path(path)
     transpire_py = path / ".transpire.py"
-    transpire_toml = path / ".transpire.toml"
 
-    if (not force) and (transpire_py.exists() or transpire_toml.exists()):
+    if (not force) and transpire_py.exists():
         logger.error(
             "Looks like this repository is already initialized. To reinitialize, rerun with --force."
         )
@@ -35,22 +34,16 @@ def repository(path, force, **kwargs) -> None:
     transpire_py.write_text(
         textwrap.dedent(
             """
-            from transpire import emit
-            from transpire import resources
+            from transpire.dsl import emit
+            from transpire.dsl.resources import Deployment
+
+            # TODO: Replace me with the name for this app!
+            name = "echoserver"
 
             # TODO: Replace me with the configuration for this app!
             def build():
                 deployment = resources.Deployment.simple("echoserver", "k8s.gcr.io/echoserver", "8080")
                 emit(deployment)
-            """
-        )
-    )
-    transpire_toml.write_text(
-        textwrap.dedent(
-            f"""
-            [[image]]
-            name = "{path.resolve().name}"
-            dockerfile = "Dockerfile"
             """
         )
     )
