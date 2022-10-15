@@ -1,4 +1,5 @@
-from transpire.dsl import emit, helm
+from transpire import helm
+from transpire import emit
 
 name = "cilium"
 

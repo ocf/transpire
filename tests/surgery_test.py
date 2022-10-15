@@ -1,6 +1,6 @@
 import pytest
 
-from transpire.dsl.surgery import delve, edit_manifests, make_edit_manifest, shelve
+from transpire.surgery import delve, edit_manifests, make_edit_manifest, shelve
 
 
 class TestDelve:
