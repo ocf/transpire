@@ -1,7 +1,15 @@
 import click
 
+from transpire.internal import config
 
-@click.command()
-def dev(**kwargs) -> None:
-    """keep rebuilding YAML as you edit your Python"""
-    raise NotImplementedError("Not yet implemented!")
+
+@click.group()
+def commands(**kwargs):
+    """devtools? idk"""
+    pass
+
+
+@commands.command()
+def schema(**kwargs) -> None:
+    """print the json schema for a transpire parent"""
+    print(config.ClusterConfig.schema_json())

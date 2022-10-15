@@ -8,7 +8,6 @@ from abc import ABC, abstractmethod
 from functools import cache
 from pathlib import Path
 from types import ModuleType
-from typing import Annotated, Literal
 
 import tomlkit
 from pydantic import AnyUrl, BaseModel, Field
@@ -97,7 +96,6 @@ class ModuleConfig(ABC):
 
 
 class LocalModuleConfig(ModuleConfig, BaseModel):
-    source: Literal["local"]
     path: Path = Field(
         description="The path to the transpire config file within the module"
     )
@@ -118,8 +116,7 @@ class LocalModuleConfig(ModuleConfig, BaseModel):
 
 
 class GitModuleConfig(ModuleConfig, BaseModel):
-    source: Literal["git"]
-    url: AnyUrl = Field(
+    git: AnyUrl = Field(
         description="The URL of the remote git repository the module resides in"
     )
     branch: str | None = Field(description="The branch to deploy from")
@@ -130,14 +127,14 @@ class GitModuleConfig(ModuleConfig, BaseModel):
     def get_cached_repo(self) -> Path:
         config = CLIConfig.from_env()
         modules_cache_dir = config.cache_dir / "remote_modules"
-        cache_dir = modules_cache_dir / re.sub("[^A-Za-z0-9]", "_", self.url)
+        cache_dir = modules_cache_dir / re.sub("[^A-Za-z0-9]", "_", self.git)
         modules_cache_dir.mkdir(exist_ok=True, parents=True)
 
         if cache_dir.exists():
             branch = self.branch or "HEAD"
             try:
                 subprocess.check_call(
-                    [config.git_path, "remote", "set-url", "origin", self.url],
+                    [config.git_path, "remote", "set-url", "origin", self.git],
                     cwd=cache_dir,
                 )
                 subprocess.check_call(
@@ -164,7 +161,7 @@ class GitModuleConfig(ModuleConfig, BaseModel):
                 "1",
                 "--single-branch",
                 *branch_args,
-                self.url,
+                self.git,
                 cache_dir,
             ],
             cwd=modules_cache_dir,
@@ -183,7 +180,7 @@ class ClusterConfig(BaseModel):
 
     modules: dict[
         str,
-        Annotated[LocalModuleConfig | GitModuleConfig, Field(discriminator="source")],
+        LocalModuleConfig | GitModuleConfig,
     ] = Field(description="The list of modules to load")
 
     @classmethod

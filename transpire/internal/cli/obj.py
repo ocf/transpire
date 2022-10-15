@@ -8,11 +8,11 @@ import click
 import yaml
 
 from transpire.internal import context, render
-from transpire.internal.argocd import make_app
 from transpire.internal.config import ClusterConfig, GitModuleConfig
 
 
 def build_to_lists(module: ModuleType) -> list[dict]:
+    """given a transpire module, build its Kubernetes objects"""
     manifests: list[dict] = list()
 
     def emit_backend(objs: Iterable[dict]):
@@ -51,15 +51,20 @@ def build(out_path, **kwargs) -> None:
     out_path = Path(out_path)
     out_path.mkdir(exist_ok=True, parents=True)
 
+    names = []
     for app_name, manifests in apps_manifests.items():
-        make_app(app_name)
+        names.append(app_name)
         render.write_manifests(manifests, app_name, out_path)
+
+    # TODO: Disallow calling a transpire module "base", somehow?
+    # Can pydantic do this?
+    render.write_bases(names, out_path)
 
 
 @commands.command("print")
 @click.argument("app_name", required=False)
 def list_manifests(app_name: Optional[str] = None, **kwargs) -> None:
-    """build objects, pretty-list them to stdout"""
+    """build objects, print them to stdout"""
     py_module = None
     if app_name:
         config = ClusterConfig.from_cwd()

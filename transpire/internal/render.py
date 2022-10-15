@@ -7,6 +7,7 @@ import yaml
 from loguru import logger
 from typing_extensions import Protocol
 
+from transpire.internal import argocd
 from transpire.internal.postprocessor import postprocess
 
 
@@ -72,5 +73,21 @@ def write_manifests(objects: Iterable[dict], appname: str, manifest_dir: Path) -
             and (appdir / f"{name}_{kind}_{namespace}.yaml").exists()
         ):
             continue
+        with open(appdir / f"{name}_{kind}_{namespace}.yaml", "w") as f:
+            yaml.safe_dump(obj, f)
+
+
+def write_bases(names: Iterable[str], manifest_dir: Path) -> None:
+    """Generate ArgoCD Applications for each transpire module."""
+    # TODO: refactor
+    appdir = manifest_dir / "base"
+    if appdir.exists():
+        rmtree(appdir)
+    appdir.mkdir(exist_ok=True)
+    for name in names:
+        obj = argocd.make_app(name)
+        name = obj["metadata"].get("name", obj["metadata"].get("generateName", None))
+        kind = obj["kind"]
+        namespace = obj["metadata"].get("namespace", name)
         with open(appdir / f"{name}_{kind}_{namespace}.yaml", "w") as f:
             yaml.safe_dump(obj, f)
