@@ -1,21 +1,15 @@
-import importlib
 import sys
 from contextvars import Context
+from pathlib import Path
 from types import ModuleType
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional
 
 import click
 import yaml
 
 from transpire.internal import context, render
 from transpire.internal.argocd import make_app
-from transpire.internal.config import (
-    ClusterConfig,
-    ModuleConfig,
-    RemoteModuleConfig,
-    load_py_module_from_file,
-)
-from transpire.internal.context import get_app_name
+from transpire.internal.config import ClusterConfig, GitModuleConfig
 
 
 def build_to_lists(module: ModuleType) -> list[dict]:
@@ -75,7 +69,7 @@ def list_manifests(app_name: Optional[str] = None, **kwargs) -> None:
         if not module:
             raise ModuleNotFoundError(f"Couldn't find {app_name} in cluster.toml.")
         # Failure: The module is a remote module.
-        if isinstance(module, RemoteModuleConfig):
+        if isinstance(module, GitModuleConfig):
             raise ValueError(
                 f"{app_name} is a remote module, you should run transpire in the remote repository instead."
             )

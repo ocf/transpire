@@ -36,10 +36,7 @@ def convert_secret(secret: dict) -> dict:
         "metadata": secret["metadata"],
         # Explicitly puts the key names in the object, so you can tell if a secret changed from `git diff`.
         "spec": {
-            "data": {
-                key: encrypt_value(pub_key, value).strip()
-                for (key, value) in extract_secret(secret).items()
-            },
+            "data": {key: encrypt_value(pub_key, value).strip() for (key, value) in extract_secret(secret).items()},
             "pub_key": pub_key,
         },
     }

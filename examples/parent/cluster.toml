@@ -1,2 +1,9 @@
 [modules.cilium]
+source = "local"
 path = "modules/cilium.py"
+
+[modules.echoserver]
+source = "git"
+url = "https://github.com/ocf/transpire"
+branch = "wip/refactor"
+dir = "examples/echoserver"
