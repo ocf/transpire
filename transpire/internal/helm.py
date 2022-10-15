@@ -48,7 +48,8 @@ def add_repo(name: str, url: str) -> None:
 
     assert_helm()
     _, stderr = exec_helm(["repo", "add", name, url], check=True)
-    print(stderr)
+    if stderr:
+        print(stderr.decode("utf-8"))
 
 
 def build_chart(
