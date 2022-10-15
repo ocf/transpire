@@ -28,11 +28,11 @@ def exec_helm(args: list[str], check: bool = True) -> tuple[bytes, bytes]:
         [
             "helm",
             "--registry-config",
-            config.cache_dir / "helm" / "registry.json",
+            str(config.cache_dir / "helm" / "registry.json"),
             "--repository-cache",
-            config.cache_dir / "helm" / "repository",
+            str(config.cache_dir / "helm" / "repository"),
             "--repository-config",
-            config.cache_dir / "helm" / "repositories.yaml",
+            str(config.cache_dir / "helm" / "repositories.yaml"),
             *args,
         ],
         check=check,
@@ -47,7 +47,8 @@ def add_repo(name: str, url: str) -> None:
     """add a repository to transpire's Helm repository list"""
 
     assert_helm()
-    exec_helm(["repo", "add", name, url], check=True)
+    _, stderr = exec_helm(["repo", "add", name, url], check=True)
+    print(stderr)
 
 
 def build_chart(
@@ -55,7 +56,7 @@ def build_chart(
     chart_name: str,
     name: str,
     version: str,
-    values: dict = None,
+    values: dict | None = None,
     capabilities: list[str] | None = None,
 ) -> list[dict]:
     """build a helm chart and return a list of manifests"""
@@ -66,7 +67,7 @@ def build_chart(
     add_repo(name, repo_url)
 
     with tempfile.NamedTemporaryFile(suffix=".yml") as values_file:
-        values_file.write(yaml.dump(values))
+        values_file.write(yaml.dump(values).encode("utf-8"))
 
         capabilities_flag = []
         if capabilities is not None and len(capabilities) > 0:
@@ -88,7 +89,7 @@ def build_chart(
                 *capabilities_flag,
                 f"{chart_name}/{chart_name}",
             ],
-            check=True,
+            check=False,
         )
 
     return list(yaml.safe_load_all(stdout))
