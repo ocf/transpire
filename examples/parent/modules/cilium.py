@@ -1,5 +1,4 @@
-from transpire import helm
-from transpire import emit
+from transpire import emit, helm
 
 name = "cilium"
 

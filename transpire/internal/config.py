@@ -1,4 +1,5 @@
 import importlib
+import importlib.util
 import os
 import re
 import shutil
@@ -27,7 +28,9 @@ def first_env(*args: str, default: str | None = None) -> str:
 
     if len(args) == 0:
         if default is None:
-            raise KeyError("Unable to pull from environment, and no default was provided.")
+            raise KeyError(
+                "Unable to pull from environment, and no default was provided."
+            )
         return default
     return os.environ.get(args[0], first_env(*args[1:], default=default))
 
@@ -37,21 +40,35 @@ class CLIConfig(BaseModel):
 
     git_path: Path = Field(description="Path to the git executable", default="git")
     cache_dir: Path = Field(description="The directory where cached files are stored")
-    config_dir: Path = Field(description="The directory where transpire should write its persistent config files")
+    config_dir: Path = Field(
+        description="The directory where transpire should write its persistent config files"
+    )
 
     @classmethod
     @cache
     def from_env(cls) -> "CLIConfig":
         """pull configuration from environment variables, falling back to defaults as neccesary"""
         # TRANSPIRE_CACHE_DIR > XDG_CACHE_HOME > ~/.cache/
-        cache_dir = Path(first_env("TRANSPIRE_CACHE_DIR", "XDG_CACHE_HOME", default="~/.cache")) / "transpire"
+        cache_dir = (
+            Path(first_env("TRANSPIRE_CACHE_DIR", "XDG_CACHE_HOME", default="~/.cache"))
+            / "transpire"
+        )
 
         # TRANSPIRE_CONFIG_DIR > XDG_CONFIG_HOME > ~/.config/
-        config_dir = Path(first_env("TRANSPIRE_CONFIG_DIR", "XDG_CONFIG_HOME", default="~/.config")) / "transpire"
+        config_dir = (
+            Path(
+                first_env(
+                    "TRANSPIRE_CONFIG_DIR", "XDG_CONFIG_HOME", default="~/.config"
+                )
+            )
+            / "transpire"
+        )
         return cls(cache_dir=cache_dir.expanduser(), config_dir=config_dir.expanduser())
 
 
-def load_py_module_from_file(py_mod_name: str, path: Path, expected_app_name: str) -> ModuleType:
+def load_py_module_from_file(
+    py_mod_name: str, path: Path, expected_app_name: str
+) -> ModuleType:
     spec = importlib.util.spec_from_file_location(py_mod_name, path)
     if spec is None or spec.loader is None:
         raise ValueError(f"No Python module was found at {path}")
@@ -62,9 +79,13 @@ def load_py_module_from_file(py_mod_name: str, path: Path, expected_app_name: st
     try:
         real_app_name = module.name
     except AttributeError:
-        raise ValueError(f"Python module at {path} does not appear to be a transpire module - missing `name'")
+        raise ValueError(
+            f"Python module at {path} does not appear to be a transpire module - missing `name'"
+        )
     if real_app_name != expected_app_name:
-        raise ValueError(f"Python module at {path} has wrong name: expected {expected_app_name}, got {real_app_name}")
+        raise ValueError(
+            f"Python module at {path} has wrong name: expected {expected_app_name}, got {real_app_name}"
+        )
 
     return module
 
@@ -77,7 +98,9 @@ class ModuleConfig(ABC):
 
 class LocalModuleConfig(ModuleConfig, BaseModel):
     source: Literal["local"]
-    path: Path = Field(description="The path to the transpire config file within the module")
+    path: Path = Field(
+        description="The path to the transpire config file within the module"
+    )
 
     def load_py_module(self, name: str) -> ModuleType:
         # TODO: do something about the implicit assumption that cwd == root of cluster repo
@@ -96,9 +119,13 @@ class LocalModuleConfig(ModuleConfig, BaseModel):
 
 class GitModuleConfig(ModuleConfig, BaseModel):
     source: Literal["git"]
-    url: AnyUrl = Field(description="The URL of the remote git repository the module resides in")
+    url: AnyUrl = Field(
+        description="The URL of the remote git repository the module resides in"
+    )
     branch: str | None = Field(description="The branch to deploy from")
-    dir: Path = Field(description="The root path containing the module", default=Path("."))
+    dir: Path = Field(
+        description="The root path containing the module", default=Path(".")
+    )
 
     def get_cached_repo(self) -> Path:
         config = CLIConfig.from_env()
@@ -109,9 +136,18 @@ class GitModuleConfig(ModuleConfig, BaseModel):
         if cache_dir.exists():
             branch = self.branch or "HEAD"
             try:
-                subprocess.check_call([config.git_path, "remote", "set-url", "origin", self.url], cwd=cache_dir)
-                subprocess.check_call([config.git_path, "fetch", "origin", branch, "--depth", "1"], cwd=cache_dir)
-                subprocess.check_call([config.git_path, "reset", "--hard", f"origin/{branch}"], cwd=cache_dir)
+                subprocess.check_call(
+                    [config.git_path, "remote", "set-url", "origin", self.url],
+                    cwd=cache_dir,
+                )
+                subprocess.check_call(
+                    [config.git_path, "fetch", "origin", branch, "--depth", "1"],
+                    cwd=cache_dir,
+                )
+                subprocess.check_call(
+                    [config.git_path, "reset", "--hard", f"origin/{branch}"],
+                    cwd=cache_dir,
+                )
                 subprocess.check_call([config.git_path, "clean", "-dfx"], cwd=cache_dir)
             except subprocess.CalledProcessError:
                 shutil.rmtree(cache_dir)
@@ -121,22 +157,34 @@ class GitModuleConfig(ModuleConfig, BaseModel):
         cache_dir.mkdir(exist_ok=True, parents=True)
         branch_args = [] if self.branch is None else ["--branch", self.branch]
         subprocess.check_call(
-            [config.git_path, "clone", "--depth", "1", "--single-branch", *branch_args, self.url, cache_dir],
+            [
+                config.git_path,
+                "clone",
+                "--depth",
+                "1",
+                "--single-branch",
+                *branch_args,
+                self.url,
+                cache_dir,
+            ],
             cwd=modules_cache_dir,
         )
         return cache_dir
 
     def load_py_module(self, name: str) -> ModuleType:
         cache_dir = self.get_cached_repo()
-        return load_py_module_from_file("_transpire", cache_dir / self.dir / ".transpire.py", name)
+        return load_py_module_from_file(
+            "_transpire", cache_dir / self.dir / ".transpire.py", name
+        )
 
 
 class ClusterConfig(BaseModel):
     """Cluster configuration"""
 
-    modules: dict[str, Annotated[LocalModuleConfig | GitModuleConfig, Field(discriminator="source")]] = Field(
-        description="The list of modules to load"
-    )
+    modules: dict[
+        str,
+        Annotated[LocalModuleConfig | GitModuleConfig, Field(discriminator="source")],
+    ] = Field(description="The list of modules to load")
 
     @classmethod
     @cache
@@ -146,5 +194,7 @@ class ClusterConfig(BaseModel):
             with open(cluster_toml, "r") as f:
                 return cls.parse_obj(tomlkit.load(f))
         if cwd.is_mount() or (cwd / ".git").exists():
-            raise FileNotFoundError("cluster.toml not found up to current git or fs boundary")
+            raise FileNotFoundError(
+                "cluster.toml not found up to current git or fs boundary"
+            )
         return cls.from_cwd(cwd.parent)

@@ -1,6 +1,6 @@
 import click
 
-from transpire.cli import bootstrap, dev, image, obj
+from . import bootstrap, dev, image, obj
 
 __all__ = ["bootstrap", "cli", "dev", "image", "obj"]
 

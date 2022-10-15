@@ -34,8 +34,8 @@ def repository(path, force, **kwargs) -> None:
     transpire_py.write_text(
         textwrap.dedent(
             """
-            from transpire.dsl import emit
-            from transpire.dsl.resources import Deployment
+            from transpire import emit
+            from transpire.resources import Deployment
 
             # TODO: Replace me with the name for this app!
             name = "echoserver"

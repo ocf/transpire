@@ -1,5 +1,5 @@
-from transpire.dsl import emit
-from transpire.dsl.resources import Deployment
+from transpire import emit
+from transpire.resources import Deployment
 
 """
 This is the name of the current transpire module, which is used for:
@@ -11,5 +11,7 @@ name = "echoserver"
 
 
 def objects():
-    deployment = Deployment.simple(name=name, image="k8s.gcr.io/echoserver", ports=["8080"])
+    deployment = Deployment.simple(
+        name=name, image="k8s.gcr.io/echoserver", ports=["8080"]
+    )
     emit(deployment)
