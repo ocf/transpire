@@ -45,7 +45,17 @@ def commands(**kwargs) -> None:
 @click.argument("out_path", envvar="TRANSPIRE_OBJECT_OUTPUT", type=click.Path())
 def build(out_path, **kwargs) -> None:
     """build objects, write them to a folder"""
-    apps_manifests = {}  # build_to_lists()
+
+    apps_manifests = {}
+
+    config = ClusterConfig.from_cwd()
+
+    for app, module in config.modules.items():
+        py_module = module.load_py_module(app)
+        apps_manifests[app] = build_to_lists(py_module)
+
+    out_path = Path(out_path)
+    out_path.mkdir(exist_ok=True, parents=True)
 
     for app_name, manifests in apps_manifests.items():
         make_app(app_name)
