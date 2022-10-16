@@ -195,3 +195,22 @@ class ClusterConfig(BaseModel):
                 "cluster.toml not found up to current git or fs boundary"
             )
         return cls.from_cwd(cwd.parent)
+
+def get_config(name: str, module_name: str | None = None, cwd: Path = Path.cwd()) -> ModuleType:
+    if module_name:
+        cluster_toml = cwd / "cluster.toml"
+        if cluster_toml.exists():
+            return load_py_module_from_file(module_name, cluster_toml, name)
+        if cwd.is_mount() or (cwd / ".git").exists():
+            raise FileNotFoundError(
+                "cluster.toml not found up to current git or fs boundary"
+            )
+    else:
+        transpire_py = cwd / ".transpire.py"
+        if transpire_py.exists():
+            return load_py_module_from_file("_transpire", transpire_py, name)
+        if cwd.is_mount() or (cwd / ".git").exists():
+            raise FileNotFoundError(
+                ".transpire.py not found up to current git or fs boundary"
+            )
+        return get_config(name, module_name, cwd.parent)
