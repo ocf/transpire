@@ -6,7 +6,8 @@ def make_app(
     repo_url: str = "https://github.com/ocf/cluster.git",
     repo_branch: str = "HEAD",
 ) -> dict:
-    assert is_valid_dnsname(app_name)
+    if not is_valid_dnsname(app_name):
+        raise ValueError(f"Expected a valid DNS name, but got {app_name} instead.")
 
     return {
         "apiVersion": "argoproj.io/v1alpha1",
@@ -20,7 +21,7 @@ def make_app(
             },
             "source": {
                 "repoURL": repo_url,
-                "path": f"manifests/{app_name}",
+                "path": f"{app_name}",
                 "targetRevision": repo_branch,
             },
             "syncPolicy": {

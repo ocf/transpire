@@ -19,6 +19,7 @@ def encrypt_value(key: str, value: str) -> str:
         ["arcanum-cli", "encrypt", str(value)],
         env={"ARCANUM_PUB_KEY": key, "PATH": os.getenv("PATH", "")},
         capture_output=True,
+        check=True,
     ).stdout.decode()
 
 

@@ -90,7 +90,7 @@ def build_chart(
                 *capabilities_flag,
                 f"{chart_name}/{chart_name}",
             ],
-            check=False,
+            check=True,
         )
 
     return list(yaml.safe_load_all(stdout))
