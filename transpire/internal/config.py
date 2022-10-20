@@ -199,19 +199,15 @@ class ClusterConfig(BaseModel):
 
 def get_config(module_name: str | None = None, cwd: Path = Path.cwd()) -> ModuleType:
     if module_name:
+        cluster_config = ClusterConfig.from_cwd(cwd)
+        module = cluster_config.modules.get(module_name)
+        if module is not None and isinstance(
+            module, (LocalModuleConfig, GitModuleConfig)
+        ):
+            return module.load_py_module(module_name)
         cluster_toml = cwd / "cluster.toml"
-        if cluster_toml.exists():
-            cluster_config = ClusterConfig.from_cwd(cwd)
-            module = cluster_config.modules.get(module_name)
-            if module is not None and isinstance(
-                module, (LocalModuleConfig, GitModuleConfig)
-            ):
-                return module.load_py_module(module_name)
-            raise ValueError(
-                f"Python module at {cluster_toml} is missing module {module_name}"
-            )
-        raise FileNotFoundError(
-            "cluster.toml not found up to current git or fs boundary"
+        raise ValueError(
+            f"Python module at {cluster_toml} is missing module {module_name}"
         )
 
     transpire_py = cwd / ".transpire.py"
