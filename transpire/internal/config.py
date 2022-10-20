@@ -66,7 +66,7 @@ class CLIConfig(BaseModel):
 
 
 def load_py_module_from_file(
-    py_mod_name: str, path: Path, expected_app_name: str | None
+    py_mod_name: str, path: Path, expected_app_name: str | None = None
 ) -> ModuleType:
     spec = importlib.util.spec_from_file_location(py_mod_name, path)
     if spec is None or spec.loader is None:
