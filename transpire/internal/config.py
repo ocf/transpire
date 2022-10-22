@@ -66,7 +66,7 @@ class CLIConfig(BaseModel):
 
 
 def load_py_module_from_file(
-    py_mod_name: str, path: Path, expected_app_name: str
+    py_mod_name: str, path: Path, expected_app_name: str | None = None
 ) -> ModuleType:
     spec = importlib.util.spec_from_file_location(py_mod_name, path)
     if spec is None or spec.loader is None:
@@ -81,7 +81,7 @@ def load_py_module_from_file(
         raise ValueError(
             f"Python module at {path} does not appear to be a transpire module - missing `name'"
         )
-    if real_app_name != expected_app_name:
+    if expected_app_name is not None and real_app_name != expected_app_name:
         raise ValueError(
             f"Python module at {path} has wrong name: expected {expected_app_name}, got {real_app_name}"
         )
@@ -195,3 +195,26 @@ class ClusterConfig(BaseModel):
                 "cluster.toml not found up to current git or fs boundary"
             )
         return cls.from_cwd(cwd.parent)
+
+
+def get_config(module_name: str | None = None, cwd: Path = Path.cwd()) -> ModuleType:
+    if module_name:
+        cluster_config = ClusterConfig.from_cwd(cwd)
+        module = cluster_config.modules.get(module_name)
+        if module is not None and isinstance(
+            module, (LocalModuleConfig, GitModuleConfig)
+        ):
+            return module.load_py_module(module_name)
+        cluster_toml = cwd / "cluster.toml"
+        raise ValueError(
+            f"Python module at {cluster_toml} is missing module {module_name}"
+        )
+
+    transpire_py = cwd / ".transpire.py"
+    if transpire_py.exists():
+        return load_py_module_from_file("_transpire", transpire_py, None)
+    if cwd.is_mount() or (cwd / ".git").exists():
+        raise FileNotFoundError(
+            ".transpire.py not found up to current git or fs boundary"
+        )
+    return get_config(module_name, cwd.parent)
