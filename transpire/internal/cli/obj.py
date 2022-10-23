@@ -54,7 +54,7 @@ def build(out_path, **kwargs) -> None:
     names = []
     for app_name, manifests in apps_manifests.items():
         names.append(app_name)
-        render.write_manifests(manifests, app_name, out_path)
+        render.write_manifests(config, manifests, app_name, out_path)
 
     # TODO: Disallow calling a transpire module "base", somehow?
     # Can pydantic do this?

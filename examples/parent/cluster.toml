@@ -1,5 +1,13 @@
 #:schema ../../schema.json
 
+apiVersion = "v1"
+
+[secrets]
+provider = "bitnami"
+
+[secrets.bitnami]
+cert_path = "kubeseal.pem"
+
 [modules.cilium]
 path = "modules/cilium.py"
 

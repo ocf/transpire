@@ -5,33 +5,15 @@ from typing import Callable, Iterable, Union
 
 import yaml
 from loguru import logger
-from typing_extensions import Protocol
 
 from transpire.internal import argocd
-from transpire.internal.postprocessor import postprocess
-
-
-class ToDict(Protocol):
-    def to_dict(self) -> dict:
-        ...
-
-
-ManifestLike = Union[dict, ToDict]
+from transpire.internal.config import ClusterConfig
+from transpire.internal.postprocessor import ManifestError, postprocess
+from transpire.internal.types import ManifestLike, coerce_dict
 
 EmitBackendFunc = Callable[[Iterable[dict]], None]
 
 _emit_backend: ContextVar[EmitBackendFunc] = ContextVar("_emit_backend")
-
-
-def _coerce_dict(obj: ManifestLike) -> dict:
-    if isinstance(obj, dict):
-        return obj
-    try:
-        to_dict = getattr(obj, "to_dict")
-        return to_dict()
-    except AttributeError:
-        pass
-    raise TypeError("unsupported manifest type")
 
 
 def emit(objs: Union[ManifestLike, Iterable[ManifestLike]]) -> None:
@@ -49,22 +31,38 @@ def emit(objs: Union[ManifestLike, Iterable[ManifestLike]]) -> None:
         else:
             objs_iter = [objs]
 
-    backend(_coerce_dict(o) for o in objs_iter)
+    backend(coerce_dict(o) for o in objs_iter)
 
 
-def write_manifests(objects: Iterable[dict], appname: str, manifest_dir: Path) -> None:
+def write_manifests(
+    config: ClusterConfig, objects: Iterable[dict], appname: str, manifest_dir: Path
+) -> None:
     """Write objects to manifest_dir as YAML files."""
     appdir = manifest_dir / appname
     if appdir.exists():
         rmtree(appdir)
     appdir.mkdir(exist_ok=True)
+
+    failed = False
+    processed_objs = {}
+
     for obj in objects:
         if obj is None:
             logger.warn(
                 "Got a None object as a Kubernetes manifest, did something fail to build?"
             )
             continue
-        obj = postprocess(obj, dev=False)
+        try:
+            obj = postprocess(config, obj, dev=False)
+        except ManifestError as err:
+            name = obj["metadata"].get("name", obj["metadata"].get("generateName"))
+            logger.exception(f"Error processing object: {name}")
+            if err.suggestion:
+                logger.info("Suggested replacement:")
+                logger.info(err.suggestion)
+            failed = True
+            continue
+
         name = obj["metadata"].get("name", obj["metadata"].get("generateName", None))
         kind = obj["kind"]
         namespace = obj["metadata"].get("namespace", appname)
@@ -73,7 +71,13 @@ def write_manifests(objects: Iterable[dict], appname: str, manifest_dir: Path) -
             and (appdir / f"{name}_{kind}_{namespace}.yaml").exists()
         ):
             continue
-        with open(appdir / f"{name}_{kind}_{namespace}.yaml", "w") as f:
+        processed_objs[f"{name}_{kind}_{namespace}.yaml"] = obj
+
+    if failed:
+        logger.error("Exceptions encountered, manifests will not be written.")
+
+    for fname, obj in processed_objs.items():
+        with open(appdir / fname, "w") as f:
             yaml.safe_dump(obj, f)
 
 

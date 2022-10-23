@@ -1,11 +1,11 @@
-from io import BytesIO
+from pathlib import Path
 from subprocess import PIPE, run
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, PrivateAttr
 
-from transpire.internal.render import ManifestLike, _coerce_dict
 from transpire.internal.secrets import SecretsProvider
+from transpire.internal.types import ManifestLike, coerce_dict
 
 
 class BitnamiSealedSecrets(SecretsProvider):
@@ -18,7 +18,7 @@ class BitnamiSealedSecrets(SecretsProvider):
 
         process = run(
             ["kubeseal", "seal", "--cert", self._cert],
-            stdin=BytesIO(yaml.dump(_coerce_dict(secret))),
+            input=yaml.dump(coerce_dict(secret)).encode("utf-8"),
             stdout=PIPE,
             check=True,
         )
@@ -27,4 +27,4 @@ class BitnamiSealedSecrets(SecretsProvider):
 
 
 class BitnamiSealedSecretsConfig(BaseModel):
-    certificate: str
+    cert_path: Path = Field(description="Path to the certificate")
