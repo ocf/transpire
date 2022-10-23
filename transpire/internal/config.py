@@ -8,9 +8,12 @@ from abc import ABC, abstractmethod
 from functools import cache
 from pathlib import Path
 from types import ModuleType
+from typing import Literal, Optional
 
 import tomlkit
 from pydantic import AnyUrl, BaseModel, Field
+
+from transpire.internal.secrets.bitnamisealedsecrets import BitnamiSealedSecretsConfig
 
 
 def first_env(*args: str, default: str | None = None) -> str:
@@ -178,10 +181,18 @@ class GitModuleConfig(ModuleConfig, BaseModel):
 class ClusterConfig(BaseModel):
     """Cluster configuration"""
 
+    class SecretsConfig(BaseModel):
+        provider: Literal["bitnami"] = Field(description="secrets provider to use")
+        bitnami: Optional[BitnamiSealedSecretsConfig] = Field(
+            description="configuration for bitnami sealed secrets"
+        )
+
+    apiVersion: Literal["v1"]
+    secrets: SecretsConfig = Field(description="configuration for the secrets provider")
     modules: dict[
         str,
         LocalModuleConfig | GitModuleConfig,
-    ] = Field(description="The list of modules to load")
+    ] = Field(description="list of modules to load")
 
     @classmethod
     @cache
