@@ -178,6 +178,13 @@ class GitModuleConfig(ModuleConfig, BaseModel):
         )
 
 
+class CIConfig(BaseModel):
+    """CI Configuration"""
+
+    namespace: str = Field(description="kubernetes namespace", default="transpire")
+    webhook_url: str = Field(description="github webhook url")
+
+
 class ClusterConfig(BaseModel):
     """Cluster configuration"""
 
@@ -193,6 +200,8 @@ class ClusterConfig(BaseModel):
         str,
         LocalModuleConfig | GitModuleConfig,
     ] = Field(description="list of modules to load")
+
+    ci: CIConfig
 
     @classmethod
     @cache
