@@ -10,7 +10,7 @@ parameters = [
 with WorkflowTemplate("stub", parameters=parameters) as w:
     Task(
         "stub",
-        image="ghcr.io/ocf/transpire-stub",
+        image="ghcr.io/ocf/transpire",
         command=["python", "-m", "transpire.internal.stub"],
         env=[
             Env(name="GIT_URL", value=w.get_parameter("git")),
