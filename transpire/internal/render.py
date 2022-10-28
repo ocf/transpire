@@ -81,15 +81,15 @@ def write_manifests(
             yaml.safe_dump(obj, f)
 
 
-def write_bases(names: Iterable[str], manifest_dir: Path) -> None:
+def write_bases(names_and_namespaces: dict[str, str], manifest_dir: Path) -> None:
     """Generate ArgoCD Applications for each transpire module."""
     # TODO: refactor
     appdir = manifest_dir / "base"
     if appdir.exists():
         rmtree(appdir)
     appdir.mkdir(exist_ok=True)
-    for name in names:
-        obj = argocd.make_app(name)
+    for name, ns in names_and_namespaces:
+        obj = argocd.make_app(name, ns)
         name = obj["metadata"].get("name", obj["metadata"].get("generateName", None))
         kind = obj["kind"]
         namespace = obj["metadata"].get("namespace", name)

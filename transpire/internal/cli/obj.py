@@ -11,24 +11,33 @@ from transpire.internal import context, render
 from transpire.internal.config import ClusterConfig, GitModuleConfig
 
 
-def build_to_lists(module: ModuleType) -> list[dict]:
-    """given a transpire module, build its Kubernetes objects"""
+def build_to_lists(module: ModuleType) -> tuple[str, list[dict]]:
+    """
+    Given a transpire module, build its Kubernetes objects.
+
+    Returns (namespace, objects)
+    """
     manifests: list[dict] = list()
+    namespace: str | None = None
 
     def emit_backend(objs: Iterable[dict]):
         manifests.extend(objs)
 
     def go():
+        nonlocal namespace
         render._emit_backend.set(emit_backend)
         context.set_app_name(module.name)
         if hasattr(module, "ns"):
             context.set_ns(module.ns)
+        namespace = context.get_current_namespace()
         module.objects()
 
     ctx = Context()
     ctx.run(go)
 
-    return manifests
+    assert namespace is not None
+
+    return namespace, manifests
 
 
 @click.group()
@@ -42,7 +51,7 @@ def commands(**kwargs) -> None:
 def build(out_path, **kwargs) -> None:
     """build objects, write them to a folder"""
 
-    apps_manifests = {}
+    apps_manifests: dict[str, tuple[str, list[dict]]] = {}
 
     config = ClusterConfig.from_cwd()
 
@@ -53,14 +62,14 @@ def build(out_path, **kwargs) -> None:
     out_path = Path(out_path)
     out_path.mkdir(exist_ok=True, parents=True)
 
-    names = []
-    for app_name, manifests in apps_manifests.items():
-        names.append(app_name)
+    names_and_namespaces: dict[str, str] = {}
+    for app_name, (ns, manifests) in apps_manifests.items():
+        names_and_namespaces[app_name] = ns
         render.write_manifests(config, manifests, app_name, out_path)
 
     # TODO: Disallow calling a transpire module "base", somehow?
     # Can pydantic do this?
-    render.write_bases(names, out_path)
+    render.write_bases(names_and_namespaces, out_path)
 
 
 @commands.command("print")
