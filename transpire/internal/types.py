@@ -17,4 +17,4 @@ def coerce_dict(obj: ManifestLike) -> dict:
         return to_dict()
     except AttributeError:
         pass
-    raise TypeError("unsupported manifest type")
+    raise TypeError(f"unsupported manifest type: {type(obj)}")

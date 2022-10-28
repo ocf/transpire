@@ -89,7 +89,7 @@ def build_chart(
                 "--name-template",
                 name,
                 *capabilities_flag,
-                f"{chart_name}/{chart_name}",
+                f"{name}/{chart_name}",
             ],
             check=True,
         )

@@ -31,7 +31,7 @@ def emit(objs: Union[ManifestLike, Iterable[ManifestLike]]) -> None:
         else:
             objs_iter = [objs]
 
-    backend(coerce_dict(o) for o in objs_iter)
+    backend(coerce_dict(o) for o in objs_iter if o != None)
 
 
 def write_manifests(
