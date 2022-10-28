@@ -20,7 +20,9 @@ def build_to_lists(module: ModuleType) -> list[dict]:
 
     def go():
         render._emit_backend.set(emit_backend)
-        context._current_app.set(module.name)
+        context.set_app_name(module.name)
+        if hasattr(module, "ns"):
+            context.set_ns(module.ns)
         module.objects()
 
     ctx = Context()

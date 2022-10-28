@@ -3,6 +3,7 @@ from transpire.internal.validation import is_valid_dnsname
 
 def make_app(
     app_name: str,
+    app_namespace: str,
     repo_url: str = "https://github.com/ocf/cluster.git",
     repo_branch: str = "HEAD",
 ) -> dict:
@@ -17,7 +18,7 @@ def make_app(
             "project": "default",
             "destination": {
                 "server": "https://kubernetes.default.svc",
-                "namespace": app_name,
+                "namespace": app_namespace,
             },
             "source": {
                 "repoURL": repo_url,

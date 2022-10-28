@@ -69,6 +69,7 @@ def build_chart(
 
     with tempfile.NamedTemporaryFile(suffix=".yml") as values_file:
         values_file.write(yaml.dump(values).encode("utf-8"))
+        values_file.flush()
 
         capabilities_flag = []
         if capabilities is not None and len(capabilities) > 0:
