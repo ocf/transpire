@@ -1,7 +1,7 @@
 from contextvars import ContextVar
 from pathlib import Path
 from shutil import rmtree
-from typing import Callable, Iterable, Union
+from typing import Callable, Iterable
 
 import yaml
 from loguru import logger
@@ -9,29 +9,19 @@ from loguru import logger
 from transpire.internal import argocd
 from transpire.internal.config import ClusterConfig
 from transpire.internal.postprocessor import ManifestError, postprocess
-from transpire.internal.types import ManifestLike, coerce_dict
+from transpire.internal.types import ManifestLike, coerce_many_to_dicts
 
 EmitBackendFunc = Callable[[Iterable[dict]], None]
 
 _emit_backend: ContextVar[EmitBackendFunc] = ContextVar("_emit_backend")
 
 
-def emit(objs: Union[ManifestLike, Iterable[ManifestLike]]) -> None:
+def emit(objs: ManifestLike | Iterable[ManifestLike | None]) -> None:
     try:
         backend = _emit_backend.get()
     except LookupError:
         raise RuntimeError("cannot emit outside of a transpire build")
-
-    objs_iter: Iterable[ManifestLike]
-    if isinstance(objs, dict):
-        objs_iter = [objs]
-    else:
-        if isinstance(objs, Iterable):
-            objs_iter = objs
-        else:
-            objs_iter = [objs]
-
-    backend(coerce_dict(o) for o in objs_iter if o != None)
+    backend(coerce_many_to_dicts(objs))
 
 
 def write_manifests(

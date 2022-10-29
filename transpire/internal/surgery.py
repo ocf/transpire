@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Iterable, Optional, cast
 
 __all__ = ["delve", "shelve", "edit_manifests", "make_edit_manifest"]
 
@@ -55,12 +55,12 @@ def shelve(
 
 
 def edit_manifests(
-    edits: Dict[
-        Union[Tuple[str, str], Tuple[Tuple[str, str], str]], Callable[[dict], dict]
+    edits: dict[
+        tuple[str, str] | tuple[tuple[str, str], str], Callable[[dict], dict | None]
     ],
     manifests: Iterable[dict],
-) -> List[dict]:
-    resolved_edits: Dict[Tuple[Optional[str], str, str], Callable[[dict], dict]] = {
+) -> list[dict]:
+    resolved_edits: dict[tuple[str | None, str, str], Callable[[dict], dict | None]] = {
         (
             k[0][0]
             if isinstance(k[0], tuple)
@@ -72,8 +72,8 @@ def edit_manifests(
     }
     unseen = set(resolved_edits.keys())
 
-    def mapper(m: dict) -> dict:
-        key1: Tuple[Optional[str], str, str] = (
+    def mapper(m: dict) -> dict | None:
+        key1: tuple[str | None, str, str] = (
             m["apiVersion"],
             m["kind"],
             m["metadata"]["name"],
@@ -88,14 +88,14 @@ def edit_manifests(
             return func(m)
         return m
 
-    result = list(map(mapper, manifests))
+    result = list(o for o in map(mapper, manifests) if o is not None)
     if unseen:
         raise RuntimeError(f"Some edits were not applied: {repr(unseen)}")
     return result
 
 
 def make_edit_manifest(
-    edits: Dict[Iterable[str], Any], *, create_parents: bool = False
+    edits: dict[Iterable[str], Any], *, create_parents: bool = False
 ) -> Callable[[dict], dict]:
     def edit(m):
         for path, val in edits.items():
