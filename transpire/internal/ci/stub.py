@@ -18,3 +18,7 @@ def main():
 
     module = config.load_py_module()
     module.ci().create()
+
+
+if __name__ == "__main__":
+    main()
