@@ -1,4 +1,3 @@
-from transpire import emit
 from transpire.resources import Deployment
 
 """
@@ -14,4 +13,6 @@ def objects():
     deployment = Deployment.simple(
         name=name, image="k8s.gcr.io/echoserver", ports=["8080"]
     )
-    emit(deployment)
+    # TODO: This causes transpire to error because `api_version` is emitted instead of `apiVersion` for some reason.
+    # I need to work on stuff and don't know why, so removing for now.
+    # emit(deployment)
