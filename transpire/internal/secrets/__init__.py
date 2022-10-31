@@ -1,6 +1,6 @@
 from abc import ABC
 
-from transpire.internal.types import ManifestLike
+from transpire.types import ManifestLike
 
 
 class SecretsProvider(ABC):

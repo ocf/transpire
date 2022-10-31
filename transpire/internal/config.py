@@ -14,6 +14,7 @@ import tomlkit
 from pydantic import AnyUrl, BaseModel, Field
 
 from transpire.internal.secrets.bitnamisealedsecrets import BitnamiSealedSecretsConfig
+from transpire.types import Module
 
 
 def first_env(*args: str, default: str | None = None) -> str:
@@ -96,6 +97,9 @@ class ModuleConfig(ABC):
     @abstractmethod
     def load_py_module(self, name: str) -> ModuleType:
         ...
+
+    def load_module(self, name: str) -> Module:
+        return Module(self.load_py_module(name))
 
 
 class LocalModuleConfig(ModuleConfig, BaseModel):
@@ -217,14 +221,14 @@ class ClusterConfig(BaseModel):
         return cls.from_cwd(cwd.parent)
 
 
-def get_config(module_name: str | None = None, cwd: Path = Path.cwd()) -> ModuleType:
+def get_config(module_name: str | None = None, cwd: Path = Path.cwd()) -> Module:
     if module_name:
         cluster_config = ClusterConfig.from_cwd(cwd)
         module = cluster_config.modules.get(module_name)
         if module is not None and isinstance(
             module, (LocalModuleConfig, GitModuleConfig)
         ):
-            return module.load_py_module(module_name)
+            return module.load_module(module_name)
         cluster_toml = cwd / "cluster.toml"
         raise ValueError(
             f"Python module at {cluster_toml} is missing module {module_name}"
@@ -232,7 +236,7 @@ def get_config(module_name: str | None = None, cwd: Path = Path.cwd()) -> Module
 
     transpire_py = cwd / ".transpire.py"
     if transpire_py.exists():
-        return load_py_module_from_file("_transpire", transpire_py, None)
+        return Module(load_py_module_from_file("_transpire", transpire_py, None))
     if cwd.is_mount() or (cwd / ".git").exists():
         raise FileNotFoundError(
             ".transpire.py not found up to current git or fs boundary"

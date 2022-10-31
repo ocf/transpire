@@ -3,11 +3,11 @@ from subprocess import PIPE, run
 from typing import Iterable
 
 import yaml
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, Field
 
 from transpire.internal.secrets import SecretsProvider
 from transpire.internal.surgery import edit_manifests
-from transpire.internal.types import ManifestLike, coerce_dict, coerce_many_to_dicts
+from transpire.types import ManifestLike, manifest_to_dict, manifests_to_dict
 
 
 class BitnamiSealedSecrets(SecretsProvider):
@@ -20,7 +20,7 @@ class BitnamiSealedSecrets(SecretsProvider):
 
         process = run(
             ["kubeseal", "seal", "--cert", self._cert],
-            input=yaml.dump(coerce_dict(secret)).encode("utf-8"),
+            input=yaml.dump(manifest_to_dict(secret)).encode("utf-8"),
             stdout=PIPE,
             check=True,
         )
@@ -36,8 +36,8 @@ def merge_secrets(
     sealed_secrets: ManifestLike | Iterable[ManifestLike],
     manifests: ManifestLike | Iterable[ManifestLike | None],
 ) -> Iterable[dict]:
-    sealed_secrets_resolved = coerce_many_to_dicts(sealed_secrets)
-    manifests_resolved = coerce_many_to_dicts(manifests)
+    sealed_secrets_resolved = manifests_to_dict(sealed_secrets)
+    manifests_resolved = manifests_to_dict(manifests)
 
     return [
         *sealed_secrets_resolved,

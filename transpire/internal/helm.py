@@ -8,7 +8,7 @@ from typing import Any
 import yaml
 
 from transpire.internal.config import CLIConfig
-from transpire.internal.context import get_current_namespace
+from transpire.internal.context import get_app_ns
 
 __all__ = ["build_chart_from_versions", "build_chart"]
 
@@ -52,6 +52,13 @@ def add_repo(name: str, url: str) -> None:
         print(stderr.decode("utf-8"))
 
 
+def update_repo(name: str) -> None:
+    """update a repository in transpire's Helm cache"""
+
+    assert_helm()
+    exec_helm(["repo", "update", name], check=False)
+
+
 def build_chart(
     repo_url: str,
     chart_name: str,
@@ -66,6 +73,7 @@ def build_chart(
     # - maybe have a config file at cluster level?
 
     add_repo(name, repo_url)
+    update_repo(name)
 
     with tempfile.NamedTemporaryFile(suffix=".yml") as values_file:
         values_file.write(yaml.dump(values).encode("utf-8"))
@@ -80,7 +88,7 @@ def build_chart(
             [
                 "template",
                 "-n",
-                get_current_namespace(),
+                get_app_ns(),
                 "--values",
                 values_file.name,
                 "--include-crds",

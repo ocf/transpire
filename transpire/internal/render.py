@@ -1,7 +1,6 @@
-from contextvars import ContextVar
 from pathlib import Path
 from shutil import rmtree
-from typing import Callable, Iterable
+from typing import Iterable
 
 import yaml
 from loguru import logger
@@ -9,19 +8,7 @@ from loguru import logger
 from transpire.internal import argocd
 from transpire.internal.config import ClusterConfig
 from transpire.internal.postprocessor import ManifestError, postprocess
-from transpire.internal.types import ManifestLike, coerce_many_to_dicts
-
-EmitBackendFunc = Callable[[Iterable[dict]], None]
-
-_emit_backend: ContextVar[EmitBackendFunc] = ContextVar("_emit_backend")
-
-
-def emit(objs: ManifestLike | Iterable[ManifestLike | None]) -> None:
-    try:
-        backend = _emit_backend.get()
-    except LookupError:
-        raise RuntimeError("cannot emit outside of a transpire build")
-    backend(coerce_many_to_dicts(objs))
+from transpire.types import Module
 
 
 def write_manifests(
@@ -37,11 +24,6 @@ def write_manifests(
     processed_objs = {}
 
     for obj in objects:
-        if obj is None:
-            logger.warn(
-                "Got a None object as a Kubernetes manifest, did something fail to build?"
-            )
-            continue
         try:
             obj = postprocess(config, obj, dev=False)
         except ManifestError as err:
@@ -71,17 +53,11 @@ def write_manifests(
             yaml.safe_dump(obj, f)
 
 
-def write_bases(names_and_namespaces: dict[str, str], manifest_dir: Path) -> None:
-    """Generate ArgoCD Applications for each transpire module."""
-    # TODO: refactor
-    appdir = manifest_dir / "base"
-    if appdir.exists():
-        rmtree(appdir)
-    appdir.mkdir(exist_ok=True)
-    for name, ns in names_and_namespaces:
-        obj = argocd.make_app(name, ns)
-        name = obj["metadata"].get("name", obj["metadata"].get("generateName", None))
-        kind = obj["kind"]
-        namespace = obj["metadata"].get("namespace", name)
-        with open(appdir / f"{name}_{kind}_{namespace}.yaml", "w") as f:
-            yaml.safe_dump(obj, f)
+def write_base(basedir: Path, module: Module):
+    basedir.mkdir(exist_ok=True)
+    obj = argocd.make_app(module.name, module.namespace)
+    argo_namespace = obj["metadata"].get("namespace")
+    if not argo_namespace:
+        raise ValueError("Argo Application has unset namespace.")
+    with open(basedir / f"{module.name}_Application_{argo_namespace}.yaml", "w") as f:
+        yaml.safe_dump(obj, f)
