@@ -1,5 +1,5 @@
 from transpire.internal.config import ClusterConfig
-from transpire.internal.secrets.bitnamisealedsecrets import BitnamiSealedSecrets
+from transpire.internal.secrets.vault import VaultSecret
 from transpire.types import ManifestLike
 
 
@@ -9,18 +9,16 @@ class ManifestError(Exception):
         self.suggestion = suggestion
 
 
-def postprocess(config: ClusterConfig, obj: dict, dev: bool = False) -> dict:
+def postprocess(
+    config: ClusterConfig, obj: dict, appname: str, dev: bool = False
+) -> dict:
     """Run all postprocessing steps (right now just secret processing)."""
 
-    # TODO: this errors for some reason sometimes
-    return obj
-
-    if obj["apiVersion"] == "v1" and obj["kind"] == "Secret" and not dev:
-        if config.secrets.provider == "bitnami":
-            provider = BitnamiSealedSecrets(str(config.secrets.bitnami.cert_path))
-            raise ManifestError(
-                "Secret objects are disallowed. Use SealedSecret objects instead.",
-                suggestion=provider.convert_secret(obj),
-            )
+    if obj["apiVersion"] == "v1" and obj["kind"] == "Secret":
+        if config.secrets.provider == "vault":
+            if not config.secrets.vault:
+                raise ValueError("Options for Vault not provided.")
+            provider = VaultSecret(config.secrets.vault, appname, dev)
+            return provider.convert_secret(obj)
 
     return obj

@@ -38,12 +38,16 @@ class Image(BaseModel):
     path: Path
 
 
+from kubernetes import client
+
+_api_client = client.ApiClient()
+
+
 def manifest_to_dict(obj: ManifestLike) -> dict:
     if isinstance(obj, dict):
         return obj
     try:
-        to_dict = getattr(obj, "to_dict")
-        return to_dict()
+        return _api_client.sanitize_for_serialization(obj)
     except AttributeError:
         pass
     raise TypeError(f"unsupported manifest type: {type(obj)}")

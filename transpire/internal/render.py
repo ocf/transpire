@@ -25,7 +25,7 @@ def write_manifests(
 
     for obj in objects:
         try:
-            obj = postprocess(config, obj, dev=False)
+            obj = postprocess(config, obj, appname, dev=False)
         except ManifestError as err:
             name = obj["metadata"].get("name", obj["metadata"].get("generateName"))
             logger.exception(f"Error processing object: {name}")

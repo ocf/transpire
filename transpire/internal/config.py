@@ -13,7 +13,7 @@ from typing import Literal, Optional
 import tomlkit
 from pydantic import AnyUrl, BaseModel, Field
 
-from transpire.internal.secrets.bitnamisealedsecrets import BitnamiSealedSecretsConfig
+from transpire.internal.secrets.vault import HashicorpVaultConfig
 from transpire.types import Module
 
 
@@ -193,8 +193,8 @@ class ClusterConfig(BaseModel):
     """Cluster configuration"""
 
     class SecretsConfig(BaseModel):
-        provider: Literal["bitnami"] = Field(description="secrets provider to use")
-        bitnami: Optional[BitnamiSealedSecretsConfig] = Field(
+        provider: Literal["vault"] = Field(description="secrets provider to use")
+        vault: Optional[HashicorpVaultConfig] = Field(
             description="configuration for bitnami sealed secrets"
         )
 
