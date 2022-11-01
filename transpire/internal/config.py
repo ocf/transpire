@@ -11,7 +11,7 @@ from types import ModuleType
 from typing import Literal, Optional
 
 import tomlkit
-from pydantic import AnyUrl, BaseModel, Field
+from pydantic import AnyUrl, BaseModel, Field, HttpUrl
 
 from transpire.internal.secrets.vault import HashicorpVaultConfig
 from transpire.types import Module
@@ -186,7 +186,7 @@ class CIConfig(BaseModel):
     """CI Configuration"""
 
     namespace: str = Field(description="kubernetes namespace", default="transpire")
-    webhook_url: str = Field(description="github webhook url")
+    webhook_url: HttpUrl = Field(description="github webhook url")
 
 
 class ClusterConfig(BaseModel):

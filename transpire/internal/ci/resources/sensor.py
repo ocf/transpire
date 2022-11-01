@@ -1,19 +1,11 @@
-from hera import Parameter, Workflow
+from argo_workflows.model_utils import model_to_dict
+from hera import Workflow
 
 from transpire.internal.config import CIConfig
 
 
 def build(config: CIConfig):
-    workflow = Workflow(
-        "transpire-stub",
-        workflow_template_ref="transpire-stub",
-        parameters=[
-            # TODO: Get these values from the argo event
-            Parameter("git", "??"),
-            Parameter("branch", "??"),
-            Parameter("dir", "??"),
-        ],
-    )
+    w = Workflow("transpire-stub", workflow_template_ref="transpire-stub")
 
     return {
         "apiVersion": "argoproj.io/v1alpha1",
@@ -45,7 +37,9 @@ def build(config: CIConfig):
                         "name": "transpire-stub",
                         "argoWorkflow": {
                             "operation": "submit",
-                            "source": {"resource": workflow.build()},
+                            "source": {
+                                "resource": model_to_dict(w.build(), serialize=True)
+                            },
                         },
                     },
                     "retryStrategy": {"steps": 3},

@@ -2,7 +2,7 @@ from transpire.internal.config import CIConfig
 
 
 def build(config: CIConfig):
-    {
+    return {
         "apiVersion": "argoproj.io/v1alpha1",
         "kind": "EventSource",
         "metadata": {
@@ -11,7 +11,13 @@ def build(config: CIConfig):
         },
         "spec": {
             "service": {
-                "ports": [{"name": "main", "port": 12000, "targetPort": 12000}]
+                "ports": [
+                    {
+                        "name": "main",
+                        "port": 12000,
+                        "targetPort": 12000,
+                    }
+                ]
             },
             "github": {
                 "main": {
@@ -20,7 +26,7 @@ def build(config: CIConfig):
                         "endpoint": "/github",
                         "port": "12000",
                         "method": "POST",
-                        "url": config.webhook_url,
+                        "url": str(config.webhook_url),
                     },
                     "events": ["*"],
                     "insecure": False,

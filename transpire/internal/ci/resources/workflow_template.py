@@ -1,4 +1,5 @@
-from hera import Env, Task, WorkflowTemplate
+from argo_workflows.model_utils import model_to_dict
+from hera import Env, Parameter, Task, ValueFrom, WorkflowTemplate
 
 from transpire.internal.config import CIConfig
 
@@ -6,18 +7,25 @@ from transpire.internal.config import CIConfig
 def build(config: CIConfig):
     # Mirrors transpire.config.GitModuleConfig
 
-    with WorkflowTemplate("transpire-stub") as w:
+    with WorkflowTemplate(
+        "transpire-stub",
+        parameters=[
+            Parameter("git", value_from=ValueFrom(event="payload.repository.url")),
+            Parameter("branch", value_from=ValueFrom("payload.ref")),
+            Parameter("dir", value="/"),
+        ],
+    ) as w:
         Task(
             "stub",
             image="ghcr.io/ocf/transpire",
             command=["python", "-m", "transpire.internal.stub"],
             env=[
-                Env(name="GIT_URL", value=w.get_parameter("git")),
-                Env(name="GIT_BRANCH", value=w.get_parameter("branch")),
-                Env(name="DIR", value=w.get_parameter("dir")),
+                Env(name="GIT_URL", value=w.get_parameter("git").value),
+                Env(name="GIT_BRANCH", value=w.get_parameter("branch").value),
+                Env(name="DIR", value=w.get_parameter("dir").value),
             ],
         )
 
-    obj = w.build()
+    obj = model_to_dict(w.build(), serialize=True)
     obj["metadata"]["namespace"] = config.namespace
     return obj

@@ -8,7 +8,7 @@ import yaml
 from loguru import logger
 
 from transpire.internal import render
-from transpire.internal.config import ClusterConfig, GitModuleConfig, get_config
+from transpire.internal.config import ClusterConfig, get_config
 
 
 @click.group()
@@ -38,6 +38,9 @@ def build(out_path, **kwargs) -> None:
         rmtree(basedir)
     for module in modules:
         render.write_base(basedir, module)
+
+    logger.info(f"Writing CI")
+    render.write_ci(config, out_path)
 
 
 @commands.command("print")
