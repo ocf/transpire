@@ -21,6 +21,7 @@ class Ingress:
                 annotations={
                     "cert-manager.io/cluster-issuer": "letsencrypt",
                     "ingress.kubernetes.io/force-ssl-redirect": "true",
+                    "io.cilium/websocket": "enabled",
                     "kubernetes.io/tls-acme": "true",
                 },
             ),
