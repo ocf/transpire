@@ -9,6 +9,7 @@ from loguru import logger
 
 from transpire.internal import render
 from transpire.internal.config import ClusterConfig, get_config
+from transpire.internal.postprocessor import postprocess
 
 
 @click.group()
@@ -49,6 +50,15 @@ def list_manifests(app_name: Optional[str] = None, **kwargs) -> None:
     """build objects, print them to stdout"""
     module = get_config(app_name)
     yaml.safe_dump_all(module.objects, sys.stdout)
+
+
+@commands.command("push_secrets")
+@click.argument("app_name", required=True)
+def push_secrets(app_name: str, **kwargs) -> None:
+    """push secrets found in objects"""
+    module = get_config(app_name)
+    for o in module.objects:
+        postprocess(ClusterConfig.from_cwd(), o, app_name, dev=True)
 
 
 @commands.command()
