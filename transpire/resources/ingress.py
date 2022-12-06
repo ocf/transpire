@@ -21,6 +21,7 @@ class Ingress:
                 annotations={
                     "cert-manager.io/cluster-issuer": "letsencrypt",
                     "ingress.kubernetes.io/force-ssl-redirect": "true",
+                    "io.cilium/websocket": "enabled",
                     "kubernetes.io/tls-acme": "true",
                 },
             ),
@@ -44,6 +45,12 @@ class Ingress:
                             ]
                         ),
                     )
-                ]
+                ],
+                tls=[
+                    client.V1IngressTLS(
+                        hosts=[host],
+                        secret_name=f"{service_name}-tls",
+                    )
+                ],
             ),
         )

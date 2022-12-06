@@ -3,10 +3,12 @@ from transpire.internal.validation import is_valid_dnsname
 
 def make_app(
     app_name: str,
+    app_namespace: str,
     repo_url: str = "https://github.com/ocf/cluster.git",
     repo_branch: str = "HEAD",
 ) -> dict:
-    assert is_valid_dnsname(app_name)
+    if not is_valid_dnsname(app_name):
+        raise ValueError(f"Expected a valid DNS name, but got {app_name} instead.")
 
     return {
         "apiVersion": "argoproj.io/v1alpha1",
@@ -16,11 +18,11 @@ def make_app(
             "project": "default",
             "destination": {
                 "server": "https://kubernetes.default.svc",
-                "namespace": app_name,
+                "namespace": app_namespace,
             },
             "source": {
                 "repoURL": repo_url,
-                "path": f"manifests/{app_name}",
+                "path": f"{app_name}",
                 "targetRevision": repo_branch,
             },
             "syncPolicy": {

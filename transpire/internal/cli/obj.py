@@ -1,0 +1,70 @@
+import sys
+from pathlib import Path
+from shutil import rmtree
+from typing import Optional
+
+import click
+import yaml
+from loguru import logger
+
+from transpire.internal import render
+from transpire.internal.config import ClusterConfig, get_config
+from transpire.internal.postprocessor import postprocess
+
+
+@click.group()
+def commands(**kwargs) -> None:
+    """tools related to Kubernetes objects (.transpire.py)"""
+    pass
+
+
+@commands.command()
+@click.argument("out_path", envvar="TRANSPIRE_OBJECT_OUTPUT", type=click.Path())
+def build(out_path, **kwargs) -> None:
+    """build objects, write them to a folder"""
+    config = ClusterConfig.from_cwd()
+    modules = [c.load_module(n) for n, c in config.modules.items()]
+
+    out_path = Path(out_path)
+    out_path.mkdir(exist_ok=True, parents=True)
+
+    for module in modules:
+        logger.info(f"Building {module.name}")
+        render.write_manifests(config, module.objects, module.name, out_path)
+
+    # TODO: Disallow calling a transpire module "base", via Pydantic.
+    logger.info(f"Writing bases")
+    basedir = Path(out_path) / "base"
+    if basedir.exists():
+        rmtree(basedir)
+    for module in modules:
+        render.write_base(basedir, module)
+
+    logger.info(f"Writing CI")
+    render.write_ci(config, out_path)
+
+
+@commands.command("print")
+@click.argument("app_name", required=False)
+def list_manifests(app_name: Optional[str] = None, **kwargs) -> None:
+    """build objects, print them to stdout"""
+    module = get_config(app_name)
+    yaml.safe_dump_all(module.objects, sys.stdout)
+
+
+@commands.command("push_secrets")
+@click.argument("app_name", required=True)
+def push_secrets(app_name: str, **kwargs) -> None:
+    """push secrets found in objects"""
+    module = get_config(app_name)
+    for o in module.objects:
+        postprocess(ClusterConfig.from_cwd(), o, app_name, dev=True)
+
+
+@commands.command()
+@click.argument("app_name", required=True)
+def apply(app_name: str, **kwargs) -> None:
+    """build objects, apply them to current kubernetes context"""
+    # module = get_config(app_name)
+    # module.objects
+    raise NotImplementedError("Not yet implemented!")

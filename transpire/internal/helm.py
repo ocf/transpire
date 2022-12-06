@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import os
 import shutil
 import tempfile
 from subprocess import PIPE, run
-from typing import Any, List, Tuple
+from typing import Any
 
 import yaml
 
 from transpire.internal.config import CLIConfig
-from transpire.internal.context import get_current_namespace
+from transpire.internal.context import get_app_ns
 
 __all__ = ["build_chart_from_versions", "build_chart"]
 
@@ -21,7 +20,7 @@ def assert_helm() -> None:
         raise RuntimeError("`helm` must be installed and in your $PATH")
 
 
-def exec_helm(args: List[str], check: bool = True) -> Tuple[bytes, bytes]:
+def exec_helm(args: list[str], check: bool = True) -> tuple[bytes, bytes]:
     """executes a helm command and returns (stdout, stderr)"""
 
     config = CLIConfig.from_env()
@@ -29,11 +28,11 @@ def exec_helm(args: List[str], check: bool = True) -> Tuple[bytes, bytes]:
         [
             "helm",
             "--registry-config",
-            config.cache_dir / "helm" / "registry.json",
+            str(config.cache_dir / "helm" / "registry.json"),
             "--repository-cache",
-            config.cache_dir / "helm" / "repository",
+            str(config.cache_dir / "helm" / "repository"),
             "--repository-config",
-            config.cache_dir / "helm" / "repositories.yaml",
+            str(config.cache_dir / "helm" / "repositories.yaml"),
             *args,
         ],
         check=check,
@@ -48,7 +47,16 @@ def add_repo(name: str, url: str) -> None:
     """add a repository to transpire's Helm repository list"""
 
     assert_helm()
-    exec_helm(["repo", "add", name, url], check=True)
+    _, stderr = exec_helm(["repo", "add", name, url], check=True)
+    if stderr:
+        print(stderr.decode("utf-8"))
+
+
+def update_repo(name: str) -> None:
+    """update a repository in transpire's Helm cache"""
+
+    assert_helm()
+    exec_helm(["repo", "update", name], check=False)
 
 
 def build_chart(
@@ -56,42 +64,44 @@ def build_chart(
     chart_name: str,
     name: str,
     version: str,
-    values: dict = {},
-    capabilities: List[str] = [],
-) -> List[dict]:
+    values: dict | None = None,
+    capabilities: list[str] | None = None,
+) -> list[dict]:
     """build a helm chart and return a list of manifests"""
 
+    # TODO: avoid needing to setting capabilities for "normal" things
+    # - maybe have a config file at cluster level?
+
     add_repo(name, repo_url)
+    update_repo(name)
 
-    values_file, values_file_name = tempfile.mkstemp(suffix=".yml")
-    with open(values_file_name, "w") as f:
-        f.write(yaml.dump(values))
+    with tempfile.NamedTemporaryFile(suffix=".yml") as values_file:
+        values_file.write(yaml.dump(values).encode("utf-8"))
+        values_file.flush()
 
-    capabilities_flag = []
-    if len(capabilities) > 0:
-        capabilities_flag = ["--api-versions", ", ".join(capabilities)]
+        capabilities_flag = []
+        if capabilities is not None and len(capabilities) > 0:
+            capabilities_flag = ["--api-versions", ", ".join(capabilities)]
 
-    # TODO: Capture `stderr` output and make available to tracing.
-    stdout, _ = exec_helm(
-        [
-            "template",
-            "-n",
-            get_current_namespace(),
-            "--values",
-            values_file_name,
-            "--include-crds",
-            "--version",
-            version,
-            "--name-template",
-            name,
-            *capabilities_flag,
-            f"{chart_name}/{chart_name}",
-        ],
-        check=True,
-    )
+        # TODO: Capture `stderr` output and make available to tracing.
+        stdout, _ = exec_helm(
+            [
+                "template",
+                "-n",
+                get_app_ns(),
+                "--values",
+                values_file.name,
+                "--include-crds",
+                "--version",
+                version,
+                "--name-template",
+                name,
+                *capabilities_flag,
+                f"{name}/{chart_name}",
+            ],
+            check=True,
+        )
 
-    os.close(values_file)
-    os.unlink(values_file_name)
     return list(yaml.safe_load_all(stdout))
 
 
@@ -99,7 +109,7 @@ def build_chart_from_versions(
     name: str,
     versions: dict[str, Any],
     values: dict = {},
-) -> list:
+) -> list[dict]:
     """thin wrapper around build_chart that builds based off a versions dict"""
 
     return build_chart(

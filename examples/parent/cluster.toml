@@ -1,0 +1,24 @@
+#:schema ../../schema.json
+
+apiVersion = "v1"
+
+[ci]
+namespace = "transpire"
+webhook_url = "https://example.com"
+
+[secrets]
+provider = "vault"
+
+[secrets.vault]
+kvstore = "kvv1"
+
+[secrets.bitnami]
+cert_path = "kubeseal.pem"
+
+[modules.cilium]
+path = "modules/cilium.py"
+
+[modules.echoserver]
+git = "https://github.com/ocf/transpire"
+branch = "wip/refactor"
+dir = "examples/echoserver"
