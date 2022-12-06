@@ -45,6 +45,12 @@ class Ingress:
                             ]
                         ),
                     )
-                ]
+                ],
+                tls=[
+                    client.V1IngressTLS(
+                        hosts=[host],
+                        secret_name=f"{service_name}-tls",
+                    )
+                ],
             ),
         )
