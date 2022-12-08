@@ -7,9 +7,10 @@ import click
 import yaml
 from loguru import logger
 
-from transpire.internal import render
+from transpire.internal import ci, render
 from transpire.internal.config import ClusterConfig, get_config
 from transpire.internal.postprocessor import postprocess
+from transpire.types import Module
 
 
 @click.group()
@@ -42,6 +43,7 @@ def build(out_path, **kwargs) -> None:
 
     logger.info(f"Writing CI")
     render.write_ci(config, out_path)
+    render.write_base(basedir, Module(ci.resources))
 
 
 @commands.command("print")

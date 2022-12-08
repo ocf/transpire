@@ -7,6 +7,8 @@ from transpire.internal.ci.resources import (
 )
 from transpire.internal.config import CIConfig
 
+name = "ci"
+
 
 def build(config: CIConfig):
     return [
