@@ -8,7 +8,6 @@ from typing import Any, Iterable, List, Protocol
 
 from hera import Env, Task, Volume, Workflow
 from kubernetes import client
-from pydantic import BaseModel, Field
 
 from transpire.internal import config, context
 
@@ -24,18 +23,16 @@ class ToDict(Protocol):
 ManifestLike = dict | ToDict
 
 
-class Version(BaseModel):
+class Version:
     """An adelie (github.com/nikhiljha/adelie) compatible version definition."""
 
     version: str
-    github: str | None = Field(
-        description="A GitHub repository URL, used for release version checking."
-    )
+    github: str | None
     helm: str | None
     chart: str | None
 
 
-class Image(BaseModel):
+class Image:
     """Describes how to build an OCI image."""
 
     name: str
