@@ -9,6 +9,7 @@ def build(config: CIConfig):
 
     with WorkflowTemplate(
         "transpire-stub",
+        service_account_name="transpire-ci",
         parameters=[
             Parameter("git", value_from=ValueFrom(event="payload.repository.url")),
             Parameter("branch", value_from=ValueFrom("payload.ref")),
