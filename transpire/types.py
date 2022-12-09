@@ -39,7 +39,7 @@ class Image(BaseModel):
     name: str
     path: Path
 
-    @cached_property
+    @property
     def resolved_path(self):
         if self.path.is_absolute():
             return self.path.relative_to("/")

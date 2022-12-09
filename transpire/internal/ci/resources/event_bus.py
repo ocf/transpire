@@ -11,10 +11,7 @@ def build(config: CIConfig):
         },
         "spec": {
             "nats": {
-                "native": {
-                    "replicas": 3,
-                    "auth": "token",
-                }
+                "native": {},
             }
         },
     }

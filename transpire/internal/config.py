@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import tomllib
 from abc import ABC, abstractmethod
-from functools import cache
+from functools import cache, cached_property
 from pathlib import Path
 from types import ModuleType
 from typing import Literal, Optional
@@ -134,6 +134,12 @@ class GitModuleConfig(ModuleConfig, BaseModel):
     dir: Path = Field(
         description="The root path containing the module", default=Path(".")
     )
+
+    @property
+    def resolved_dir(self):
+        if self.dir.is_absolute():
+            return self.dir.relative_to("/")
+        return self.dir
 
     def clone_args(self) -> list[str]:
         branch_args = [] if self.branch is None else ["--branch", self.branch]
