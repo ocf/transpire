@@ -5,6 +5,7 @@ from transpire.internal.ci.resources import (
     event_source,
     ingress,
     sensor,
+    service,
     service_account,
     workflow_template,
 )
@@ -22,5 +23,6 @@ def build(config: CIConfig):
         event_bus.build(config),
         event_source.build(config),
         sensor.build(config),
+        service.build(config),
         ingress.build(config),
     ]
