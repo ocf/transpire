@@ -10,15 +10,6 @@ def build(config: CIConfig):
             "namespace": config.namespace,
         },
         "spec": {
-            "service": {
-                "ports": [
-                    {
-                        "name": "main",
-                        "port": 12000,
-                        "targetPort": 12000,
-                    }
-                ]
-            },
             "github": {
                 "main": {
                     "organizations": ["ocf"],
