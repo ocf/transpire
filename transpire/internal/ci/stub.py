@@ -12,7 +12,7 @@ def main():
         dir=os.environ["DIR"],
     )
 
-    module = config.load_module("transpire_module")
+    module = config.load_module(None)
     module.workflow().create()
 
 

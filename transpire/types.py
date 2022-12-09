@@ -167,3 +167,5 @@ class Module:
             ]
 
             self.pipeline >> clone >> build
+
+        return w
