@@ -38,6 +38,10 @@ class Image:
     name: str
     path: Path
 
+    def __init__(self, name, path):
+        self.name = name
+        self.path = Path(path)
+
     @cached_property
     def resolved_path(self):
         if self.path.is_absolute():
