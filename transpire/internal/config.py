@@ -100,7 +100,7 @@ class ModuleConfig(ABC):
         ...
 
     def load_module(self, name: str) -> Module:
-        return Module(self.load_py_module(name))
+        return Module(self.load_py_module(name), self)
 
     def load_module_w_context(self, name: str, context):
         return Module(self.load_py_module(name), context=context)
@@ -135,6 +135,17 @@ class GitModuleConfig(ModuleConfig, BaseModel):
         description="The root path containing the module", default=Path(".")
     )
 
+    def clone_args(self) -> list[str]:
+        branch_args = [] if self.branch is None else ["--branch", self.branch]
+        return [
+            "clone",
+            "--depth",
+            "1",
+            "--single-branch",
+            *branch_args,
+            self.git,
+        ]
+
     def get_cached_repo(self) -> Path:
         config = CLIConfig.from_env()
         modules_cache_dir = config.cache_dir / "remote_modules"
@@ -159,19 +170,8 @@ class GitModuleConfig(ModuleConfig, BaseModel):
                 return cache_dir
 
         cache_dir.mkdir(exist_ok=True, parents=True)
-        branch_args = [] if self.branch is None else ["--branch", self.branch]
         subprocess.check_call(
-            [
-                config.git_path,
-                "clone",
-                "--depth",
-                "1",
-                "--single-branch",
-                *branch_args,
-                self.git,
-                cache_dir,
-            ],
-            cwd=modules_cache_dir,
+            [config.git_path, *self.clone_args(), cache_dir], cwd=modules_cache_dir
         )
         return cache_dir
 

@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 from contextvars import Context
 from functools import cached_property
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Iterable, List, Protocol
 
+from hera import Env, Task, Volume, Workflow
 from kubernetes import client
 from pydantic import BaseModel, Field
 
-from transpire.internal import context
+from transpire.internal import config, context
 
 
 class ToDict(Protocol):
@@ -37,6 +40,12 @@ class Image(BaseModel):
 
     name: str
     path: Path
+
+    @cached_property
+    def resolved_path(self):
+        if self.path.is_absolute():
+            return self.path.relative_to("/")
+        return self.path
 
 
 _api_client = client.ApiClient()
@@ -71,6 +80,12 @@ class Module:
     """Transpire modules contain information about how to build and deploy applications to Kubernetes."""
 
     pymodule: ModuleType
+    config: "config.ModuleConfig"
+
+    def __init__(self, pymodule: ModuleType, context=None, config: "config.ModuleConfig" | None = None):
+        self.pymodule = pymodule
+        self.glob_context = context
+        self.config = config
 
     @property
     def name(self) -> str:
@@ -108,6 +123,49 @@ class Module:
     def pipeline(self) -> List[dict]:
         return list(manifests_to_dict(self._render_iter("pipeline")))
 
-    def __init__(self, pymodule: ModuleType, context=None):
-        self.pymodule = pymodule
-        self.glob_context = context
+    def workflow(self) -> Workflow:
+        if self.config is None or not isinstance(self.config, config.GitModuleConfig):
+            # this is kinda janky but idk how to resolve it
+            raise ValueError("Only git modules can run ci")
+
+        with Workflow(f"{self.name}-ci") as w:
+            volume = Volume(size="25Gi", mount_path="/build")
+
+            clone = Task(
+                "clone",
+                image="alpine/git:2.36.3",
+                args=[*self.config.clone_args(), "."],
+                volumes=[volume],
+                working_dir="/build",
+            )
+
+            build = [
+                Task(
+                    "build",
+                    image="moby/buildkit:v0.10.6-rootless",
+                    command=["buildctl-daemonless.sh"],
+                    env=[
+                        Env(
+                            name="BUILDKITD_FLAGS",
+                            value="--oci-worker-no-process-sandbox",
+                        )
+                    ],
+                    args=[
+                        "build",
+                        "--frontend",
+                        "dockerfile.v0",
+                        "--local",
+                        "context=.",
+                        "--local",
+                        "dockerfile=",
+                        image.resolved_path,
+                        "--output",
+                        # TODO: Get the git hash
+                        f"type=image,name=harbor.ocf.berkeley.edu/{self.name}/{image.name}:latest",
+                    ],
+                    volumes=[volume],
+                )
+                for image in self.images
+            ]
+
+            self.pipeline >> clone >> build

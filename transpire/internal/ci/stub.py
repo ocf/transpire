@@ -16,8 +16,8 @@ def main():
         dir=os.environ["DIR"],
     )
 
-    module = config.load_py_module()
-    module.ci().create()
+    module = config.load_module("transpire_module")
+    module.workflow().create()
 
 
 if __name__ == "__main__":
