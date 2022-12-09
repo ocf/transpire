@@ -184,7 +184,7 @@ class GitModuleConfig(ModuleConfig, BaseModel):
     def load_py_module(self, name: str) -> ModuleType:
         cache_dir = self.get_cached_repo()
         return load_py_module_from_file(
-            "_transpire", cache_dir / self.dir / ".transpire.py", name
+            "_transpire", cache_dir / self.resolved_dir / ".transpire.py", name
         )
 
 
