@@ -100,6 +100,15 @@ def build_chart(
             check=True,
         )
 
+    # save our souls
+    # <https://github.com/prometheus-community/helm-charts/pull/2238>
+    # <https://github.com/prometheus-operator/prometheus-operator/pull/4897>
+    # <https://github.com/yaml/pyyaml/issues/89>
+    # <https://github.com/allenporter/k8s-gitops/commit/304c64c57926d2747328c0803c246be7dd827fdd>
+    yaml.constructor.SafeConstructor.add_constructor(
+        "tag:yaml.org,2002:value", yaml.constructor.SafeConstructor.construct_yaml_str
+    )
+
     return list(yaml.safe_load_all(stdout))
 
 
