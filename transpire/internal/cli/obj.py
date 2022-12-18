@@ -9,7 +9,6 @@ from loguru import logger
 
 from transpire.internal import ci, render
 from transpire.internal.config import ClusterConfig, get_config
-from transpire.internal.postprocessor import postprocess
 from transpire.types import Module
 
 
@@ -34,14 +33,14 @@ def build(out_path, **kwargs) -> None:
         render.write_manifests(config, module.objects, module.name, out_path)
 
     # TODO: Disallow calling a transpire module "base", via Pydantic.
-    logger.info(f"Writing bases")
+    logger.info("Writing bases")
     basedir = Path(out_path) / "base"
     if basedir.exists():
         rmtree(basedir)
     for module in modules:
         render.write_base(basedir, module)
 
-    logger.info(f"Writing CI")
+    logger.info("Writing CI")
     render.write_ci(config, out_path)
     render.write_base(basedir, Module(ci.resources))
 
@@ -52,15 +51,6 @@ def list_manifests(app_name: Optional[str] = None, **kwargs) -> None:
     """build objects, print them to stdout"""
     module = get_config(app_name)
     yaml.safe_dump_all(module.objects, sys.stdout)
-
-
-@commands.command("push_secrets")
-@click.argument("app_name", required=True)
-def push_secrets(app_name: str, **kwargs) -> None:
-    """push secrets found in objects"""
-    module = get_config(app_name)
-    for o in module.objects:
-        postprocess(ClusterConfig.from_cwd(), o, app_name, dev=True)
 
 
 @commands.command()

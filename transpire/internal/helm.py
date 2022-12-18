@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import shutil
 import tempfile
 from subprocess import PIPE, run

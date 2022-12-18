@@ -13,7 +13,8 @@ from typing import Literal, Optional
 import tomlkit
 from pydantic import AnyUrl, BaseModel, Field, HttpUrl
 
-from transpire.internal.secrets.vault import HashicorpVaultConfig
+from transpire.internal.secrets import SecretsProvider
+from transpire.internal.secrets.vault import HashicorpVaultConfig, VaultSecret
 from transpire.types import Module
 
 
@@ -242,3 +243,15 @@ def get_config(module_name: str | None = None, cwd: Path = Path.cwd()) -> Module
             ".transpire.py not found up to current git or fs boundary"
         )
     return get_config(module_name, cwd.parent)
+
+
+def provider_from_context(
+    namespace: str, dev: bool = False, config: ClusterConfig | None = None
+) -> SecretsProvider:
+    if not config:
+        config = ClusterConfig.from_cwd()
+    if config.secrets.provider == "vault":
+        if not config.secrets.vault:
+            raise ValueError("Options for Vault not provided.")
+        return VaultSecret(config.secrets.vault, namespace, dev)
+    raise ValueError("No valid secrets provider found.")

@@ -1,5 +1,4 @@
-from transpire.internal.config import ClusterConfig
-from transpire.internal.secrets.vault import VaultSecret
+from transpire.internal.config import ClusterConfig, provider_from_context
 from transpire.types import ManifestLike
 
 
@@ -12,13 +11,10 @@ class ManifestError(Exception):
 def postprocess(
     config: ClusterConfig, obj: dict, appname: str, dev: bool = False
 ) -> dict:
-    """Run all postprocessing steps (right now just secret processing)."""
+    """run all postprocessing steps (right now just secret processing)"""
 
+    provider = provider_from_context(appname, dev=dev, config=config)
     if obj["apiVersion"] == "v1" and obj["kind"] == "Secret":
-        if config.secrets.provider == "vault":
-            if not config.secrets.vault:
-                raise ValueError("Options for Vault not provided.")
-            provider = VaultSecret(config.secrets.vault, appname, dev)
-            return provider.convert_secret(obj)
+        return provider.convert_secret(obj)
 
     return obj

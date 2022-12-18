@@ -1,11 +1,12 @@
 import base64
 import os
 
-import hvac
-import hvac.exceptions
+import hvac  # type: ignore
+import hvac.exceptions  # type: ignore
 from pydantic import BaseModel
 
 from transpire.internal.secrets import SecretsProvider
+from transpire.types import ManifestLike, manifest_to_dict
 
 
 class HashicorpVaultConfig(BaseModel):
@@ -46,30 +47,34 @@ class VaultSecret(SecretsProvider):
         # TODO: Make this toggle-offable.
         self.push = dev
 
-    def convert_secret(self, secret: dict) -> dict:
-        """v1/Secret -> ricoberger.de/v1alpha1/SealedSecret"""
+    def push_secret(self, secret: ManifestLike) -> None:
+        """v1/Secret -> Hashicorp Vault"""
+        secret = manifest_to_dict(secret)
         path = f"{self.ns}/{secret['metadata']['name']}"
+        client = hvac.Client("https://vault.ocf.berkeley.edu")
+        client.token = os.getenv("VAULT_TOKEN")
+        if not client.token:
+            print(
+                "I couldn't find your VAULT_TOKEN env variable, so I can't push secrets to Vault.",
+            )
+        assert client.is_authenticated()
+        client.secrets.kv.v2.configure(mount_point=self.kvstore)
 
-        if self.push:
-            client = hvac.Client("https://vault.ocf.berkeley.edu")
-            client.token = os.getenv("VAULT_TOKEN")
-            if not client.token:
-                print(
-                    "I couldn't find your VAULT_TOKEN env variable, so I can't push secrets to Vault.",
-                )
-            assert client.is_authenticated()
-            client.secrets.kv.v2.configure(mount_point=self.kvstore)
+        pairs = extract_secret(path, secret)
+        try:
+            client.secrets.kv.v2.create_or_update_secret(
+                path=path,
+                secret=pairs,
+                cas=0,
+                mount_point=self.kvstore,
+            )
+        except hvac.exceptions.InvalidRequest as e:
+            print(f"{e} -- Probably '{path}' already created, not re-creating")
 
-            pairs = extract_secret(path, secret)
-            try:
-                client.secrets.kv.v2.create_or_update_secret(
-                    path=path,
-                    secret=pairs,
-                    cas=0,
-                    mount_point=self.kvstore,
-                )
-            except hvac.exceptions.InvalidRequest as e:
-                print(f"{e} -- Probably '{path}' already created, not re-creating")
+    def convert_secret(self, secret: ManifestLike) -> dict:
+        """v1/Secret -> ricoberger.de/v1alpha1/SealedSecret"""
+        secret = manifest_to_dict(secret)
+        path = f"{self.ns}/{secret['metadata']['name']}"
 
         if self.dev:
             return secret
