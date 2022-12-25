@@ -1,24 +1,35 @@
 from contextvars import ContextVar
 from typing import ParamSpec, TypeVar
 
-_current_app: ContextVar[str] = ContextVar("current_app")
-_current_ns: ContextVar[str] = ContextVar("current_ns")
+from pydantic import BaseModel
+
+from transpire.internal.config import ClusterConfig
+from transpire.types import Module
+
+
+class ModuleContext(BaseModel):
+    name: str
+    namespace: str
+
+
+_app_context: ContextVar[Module] = ContextVar("current_app")
+_current_global: ContextVar[ClusterConfig] = ContextVar("current_global")
 
 T = TypeVar("T")
 P = ParamSpec("P")
 
 
-def set_app_name(name: str) -> None:
-    _current_app.set(name)
+def set_app_context(info: Module) -> None:
+    _app_context.set(info)
 
 
-def set_app_ns(ns: str) -> None:
-    _current_ns.set(ns)
+def set_global_context(context: ClusterConfig) -> None:
+    _current_global.set(context)
 
 
-def get_app_name() -> str:
-    return _current_app.get()
+def get_app_context() -> Module:
+    return _app_context.get()
 
 
-def get_app_ns() -> str:
-    return _current_ns.get()
+def get_global_context() -> ClusterConfig:
+    return _current_global.get()

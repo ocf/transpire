@@ -6,7 +6,7 @@ from typing import Any
 import yaml
 
 from transpire.internal.config import CLIConfig
-from transpire.internal.context import get_app_ns
+from transpire.internal.context import get_app_context
 
 __all__ = ["build_chart_from_versions", "build_chart"]
 
@@ -86,7 +86,7 @@ def build_chart(
             [
                 "template",
                 "-n",
-                get_app_ns(),
+                get_app_context().namespace,
                 "--values",
                 values_file.name,
                 "--include-crds",

@@ -4,6 +4,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Iterable, List, Protocol
 
+from kubernetes import client
 from pydantic import BaseModel, Field
 
 from transpire.internal import context
@@ -38,8 +39,6 @@ class Image(BaseModel):
     path: Path
 
 
-from kubernetes import client
-
 _api_client = client.ApiClient()
 
 
@@ -65,7 +64,7 @@ def manifests_to_dict(
         else:
             objs_iter = [objs]
 
-    return (manifest_to_dict(o) for o in objs_iter if o != None)
+    return (manifest_to_dict(o) for o in objs_iter if o is not None)
 
 
 class Module:
@@ -84,8 +83,7 @@ class Module:
         return self.pymodule.name
 
     def _enter_context(self):
-        context.set_app_name(self.name)
-        context.set_app_ns(self.namespace)
+        context.set_app_context(self)
 
     def _render_iter(self, function: str) -> Iterable[Any]:
         def _list() -> Iterable[Any]:
