@@ -84,6 +84,8 @@ class Module:
 
     def _enter_context(self):
         context.set_app_context(self)
+        if self.glob_context is not None:
+            context.set_global_context(self.glob_context)
 
     def _render_iter(self, function: str) -> Iterable[Any]:
         def _list() -> Iterable[Any]:
@@ -106,5 +108,6 @@ class Module:
     def pipeline(self) -> List[dict]:
         return list(manifests_to_dict(self._render_iter("pipeline")))
 
-    def __init__(self, pymodule: ModuleType):
+    def __init__(self, pymodule: ModuleType, context=None):
         self.pymodule = pymodule
+        self.glob_context = context

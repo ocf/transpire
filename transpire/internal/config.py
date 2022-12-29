@@ -102,6 +102,9 @@ class ModuleConfig(ABC):
     def load_module(self, name: str) -> Module:
         return Module(self.load_py_module(name))
 
+    def load_module_w_context(self, name: str, context):
+        return Module(self.load_py_module(name), context=context)
+
 
 class LocalModuleConfig(ModuleConfig, BaseModel):
     path: Path = Field(
@@ -229,7 +232,7 @@ def get_config(module_name: str | None = None, cwd: Path = Path.cwd()) -> Module
         if module is not None and isinstance(
             module, (LocalModuleConfig, GitModuleConfig)
         ):
-            return module.load_module(module_name)
+            return module.load_module_w_context(module_name, context=cluster_config)
         cluster_toml = cwd / "cluster.toml"
         raise ValueError(
             f"Python module at {cluster_toml} is missing module {module_name}"

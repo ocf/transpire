@@ -28,7 +28,7 @@ class Deployment:
                                 name="deployment",
                                 image=image,
                                 command=command if command else None,
-                                image_pull_policy="Never",
+                                image_pull_policy="IfNotPresent",
                                 ports=[
                                     client.V1ContainerPort(container_port=x)
                                     for x in ports
@@ -36,12 +36,10 @@ class Deployment:
                                 env_from=[
                                     *(
                                         [
-                                            client.V1EnvVar(
-                                                value_from=client.V1EnvVarSource(
-                                                    config_map_key_ref=client.V1ConfigMapKeySelector(
-                                                        name=var,
-                                                    ),
-                                                )
+                                            client.V1EnvFromSource(
+                                                config_map_ref=client.V1ConfigMapEnvSource(
+                                                    name=var,
+                                                ),
                                             )
                                             for var in configs_env
                                         ]
@@ -50,12 +48,10 @@ class Deployment:
                                     ),
                                     *(
                                         [
-                                            client.V1EnvVar(
-                                                value_from=client.V1EnvVarSource(
-                                                    secret_key_ref=client.V1SecretKeySelector(
-                                                        name=var,
-                                                    ),
-                                                )
+                                            client.V1EnvFromSource(
+                                                secret_ref=client.V1SecretEnvSource(
+                                                    name=var,
+                                                ),
                                             )
                                             for var in secrets_env
                                         ]

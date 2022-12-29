@@ -11,7 +11,7 @@ class Service:
         port_on_pod: Union[int, str],
         port_on_svc: Union[int, str],
     ):
-        client.V1Service(
+        return client.V1Service(
             api_version="v1",
             kind="Service",
             metadata=client.V1ObjectMeta(name=name),

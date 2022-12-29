@@ -23,7 +23,9 @@ def commands(**kwargs) -> None:
 def build(out_path, **kwargs) -> None:
     """build objects, write them to a folder"""
     config = ClusterConfig.from_cwd()
-    modules = [c.load_module(n) for n, c in config.modules.items()]
+    modules = [
+        c.load_module_w_context(n, context=config) for n, c in config.modules.items()
+    ]
 
     out_path = Path(out_path)
     out_path.mkdir(exist_ok=True, parents=True)
