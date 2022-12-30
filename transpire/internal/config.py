@@ -145,15 +145,11 @@ class GitModuleConfig(ModuleConfig, BaseModel):
             branch = self.branch or "HEAD"
             try:
                 subprocess.check_call(
-                    [config.git_path, "remote", "set-url", "origin", self.git],
+                    [config.git_path, "fetch", self.git, branch, "--depth", "1"],
                     cwd=cache_dir,
                 )
                 subprocess.check_call(
-                    [config.git_path, "fetch", "origin", branch, "--depth", "1"],
-                    cwd=cache_dir,
-                )
-                subprocess.check_call(
-                    [config.git_path, "reset", "--hard", f"origin/{branch}"],
+                    [config.git_path, "reset", "--hard", "FETCH_HEAD"],
                     cwd=cache_dir,
                 )
                 subprocess.check_call([config.git_path, "clean", "-dfx"], cwd=cache_dir)
