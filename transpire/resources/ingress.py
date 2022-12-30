@@ -12,6 +12,7 @@ class Ingress:
         service_name: str,
         service_port: Union[int, str],
         ingress_name: Optional[str] = None,
+        path_prefix: str = "/",
     ) -> client.V1Ingress:
         return client.V1Ingress(
             api_version="networking.k8s.io/v1",
@@ -32,7 +33,8 @@ class Ingress:
                         http=client.V1HTTPIngressRuleValue(
                             paths=[
                                 client.V1HTTPIngressPath(
-                                    path_type="ImplementationSpecific",
+                                    path=path_prefix,
+                                    path_type="Prefix",
                                     backend=client.V1IngressBackend(
                                         service=client.V1IngressServiceBackend(
                                             port=client.V1ServiceBackendPort(
