@@ -11,7 +11,7 @@ transpire = 'transpire.__main__:cli'
 [tool.poetry.dependencies]
 python = "^3.11"
 PyYAML = "^6.0" # make sure to bump types-PyYAML as well
-kubernetes = "^23.3.0" # make sure to bump kubernetes-typed as well
+kubernetes = "^25.3.0" # make sure to bump kubernetes-typed as well
 tomlkit = "^0.10.0"
 click = "^8.0.4"
 loguru = "^0.6.0"
@@ -25,7 +25,7 @@ hvac = "^1.0.2"
 black = {version = "^22.1.0", allow-prereleases = true}
 mypy = "^0.940"
 types-PyYAML = "^6.0.4"
-kubernetes-typed = { git = "https://github.com/nikhiljha/kubernetes-typed.git", tag = "v23.3.0" }
+kubernetes-typed = { git = "https://github.com/nikhiljha/kubernetes-typed.git", tag = "v25.3.0" }
 types-requests = "^2.27.19"
 flake8 = "^4.0.1"
 isort = "^5.10.1"

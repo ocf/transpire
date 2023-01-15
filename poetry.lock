@@ -318,7 +318,7 @@ mypy = ">=0.761"
 
 [[package]]
 name = "kubernetes"
-version = "23.6.0"
+version = "25.3.0"
 description = "Kubernetes python client"
 category = "main"
 optional = false
@@ -361,8 +361,8 @@ dev = ["black", "flake8", "flake8-black", "flake8-isort", "gitpython (==3.1.9)",
 [package.source]
 type = "git"
 url = "https://github.com/nikhiljha/kubernetes-typed.git"
-reference = "v23.3.0"
-resolved_reference = "4f4b969aa400c88306f92560e56bda6d19b2a895"
+reference = "v25.3.0"
+resolved_reference = "e4b4dd31fde1b7f473b611476b2ce40182d4467b"
 
 [[package]]
 name = "loguru"
@@ -803,7 +803,7 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "3ac58fcbdf5eed318d0d59f9b3e0d76ac00b9129ad40ea92e5366d745e23e603"
+content-hash = "638be80be22085d637a1fe63d44a5447c292f42edba0f64bb3680df436c858b9"
 
 [metadata.files]
 ansicon = [
@@ -1058,8 +1058,8 @@ jsonschema-typed-v2 = [
     {file = "jsonschema_typed_v2-0.8.0-py3-none-any.whl", hash = "sha256:f1461a31e8c4a36f22a2384032492b51b3079af1995b289cc81efbdcbce3e5dc"},
 ]
 kubernetes = [
-    {file = "kubernetes-23.6.0-py2.py3-none-any.whl", hash = "sha256:dd58e286a53071bc8e32041f07f3c2236b3ed8ca5b9f57794a5077358f7ccb06"},
-    {file = "kubernetes-23.6.0.tar.gz", hash = "sha256:cadb1cd7c44eae5b39b50316313343c0f2aff94529f067ec2ba44d38411158e3"},
+    {file = "kubernetes-25.3.0-py2.py3-none-any.whl", hash = "sha256:eb42333dad0bb5caf4e66460c6a4a1a36f0f057a040f35018f6c05a699baed86"},
+    {file = "kubernetes-25.3.0.tar.gz", hash = "sha256:213befbb4e5aed95f94950c7eed0c2322fc5a2f8f40932e58d28fdd42d90836c"},
 ]
 kubernetes-typed = []
 loguru = [
