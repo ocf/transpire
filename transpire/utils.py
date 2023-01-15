@@ -1,6 +1,5 @@
+import tomllib
 from typing import Dict, cast
-
-import tomlkit
 
 
 def get_versions(caller) -> Dict[str, Dict[str, str]]:
@@ -10,5 +9,5 @@ def get_versions(caller) -> Dict[str, Dict[str, str]]:
 
     return cast(
         Dict[str, Dict[str, str]],
-        tomlkit.parse(file.read_text()),
+        tomllib.loads(file.read_text()),
     )

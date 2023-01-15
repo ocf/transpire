@@ -4,13 +4,13 @@ import os
 import re
 import shutil
 import subprocess
+import tomllib
 from abc import ABC, abstractmethod
 from functools import cache
 from pathlib import Path
 from types import ModuleType
 from typing import Literal, Optional
 
-import tomlkit
 from pydantic import AnyUrl, BaseModel, Field, HttpUrl
 
 from transpire.internal.secrets import SecretsProvider
@@ -212,8 +212,7 @@ class ClusterConfig(BaseModel):
     def from_cwd(cls, cwd: Path = Path.cwd()) -> "ClusterConfig":
         cluster_toml = cwd / "cluster.toml"
         if cluster_toml.exists():
-            with open(cluster_toml, "r") as f:
-                return cls.parse_obj(tomlkit.load(f))
+            return cls.parse_obj(tomllib.loads(cluster_toml.read_text()))
         if cwd.is_mount() or (cwd / ".git").exists():
             raise FileNotFoundError(
                 "cluster.toml not found up to current git or fs boundary"

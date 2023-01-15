@@ -5,8 +5,6 @@
 
 import click
 
-# import tomlkit
-
 
 @click.group()
 def commands(**kwargs) -> None:
@@ -34,7 +32,7 @@ def build(push, **kwargs) -> None:
 
     # # read the dockerfile path, app name, tags, context
     # config: cliconfig = Config.parse_obj(
-    #     tomlkit.loads(Path(".transpire.toml").read_text())
+    #     tomllib.loads(Path(".transpire.toml").read_text())
     # )
 
     # build_output: List[bytes] = []
