@@ -9,7 +9,7 @@ license = "LGPL"
 transpire = 'transpire.__main__:cli'
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 PyYAML = "^6.0" # make sure to bump types-PyYAML as well
 kubernetes = "^23.3.0" # make sure to bump kubernetes-typed as well
 tomlkit = "^0.10.0"

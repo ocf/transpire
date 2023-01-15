@@ -1,4 +1,4 @@
-FROM python:3.10-slim AS transpire
+FROM python:3.11-slim AS transpire
 
 LABEL org.opencontainers.image.source https://github.com/ocf/transpire
 
