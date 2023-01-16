@@ -18,7 +18,7 @@ def fix_base64(pairs: dict) -> dict:
     return {k: base64.b64decode(v).decode() for k, v in pairs.items()}
 
 
-def extract_secret(path: str, secret: dict) -> dict:
+def extract_secret(secret: dict) -> dict:
     """Takes a Kubernetes secret object, returns analogous Vault path and the k:v secrets."""
     # TODO: Handle generateName? Though who would put generateName on a secret? Does that even work???
     return {
@@ -60,7 +60,7 @@ class VaultSecret(SecretsProvider):
         assert client.is_authenticated()
         client.secrets.kv.v2.configure(mount_point=self.kvstore)
 
-        pairs = extract_secret(path, secret)
+        pairs = extract_secret(secret)
         try:
             client.secrets.kv.v2.create_or_update_secret(
                 path=path,
