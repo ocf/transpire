@@ -6,21 +6,21 @@ from loguru import logger
 
 
 @click.group()
-def commands(**kwargs):
+def commands(**_):
     """tools related to bootstrapping (new cluster, new repository, etc)"""
     pass
 
 
 @commands.command()
-def kubernetes(**kwargs):
+def kubernetes(**_):
     """bootstrap kubernetes to pull from your cluster repository"""
-    raise NotImplementedError("Not yet implemented!")
+    return NotImplemented
 
 
 @commands.command()
 @click.argument("path", type=click.Path(exists=True), default=".", required=False)
 @click.option("-f", "--force", is_flag=True)
-def repository(path, force, **kwargs) -> None:
+def repository(path, force, **_) -> None:
     """initializes current working directory to be a transpire app repository"""
     path = Path(path)
     transpire_py = path / ".transpire.py"
@@ -34,16 +34,18 @@ def repository(path, force, **kwargs) -> None:
     transpire_py.write_text(
         textwrap.dedent(
             """
-            from transpire import emit
             from transpire.resources import Deployment
 
-            # TODO: Replace me with the name for this app!
+            \"\"\"
+            This is the name of the current transpire module, which is used for:
+            1. The name of the ArgoCD `Application` CRD which owns these resources.
+            2. The default namespace that resources should be deployed to (i.e. if `namespace` isn't set on a resource, it won't be overridden).
+            \"\"\"
             name = "echoserver"
 
-            # TODO: Replace me with the configuration for this app!
-            def build():
-                deployment = resources.Deployment.simple("echoserver", "k8s.gcr.io/echoserver", "8080")
-                emit(deployment)
+
+            def objects():
+                yield Deployment.simple(name=name, image="k8s.gcr.io/echoserver", ports=["8080"])
             """
         )
     )

@@ -13,14 +13,14 @@ from transpire.types import Module
 
 
 @click.group()
-def commands(**kwargs) -> None:
-    """tools related to Kubernetes objects (.transpire.py)"""
+def commands(**_) -> None:
+    """tools related to Kubernetes objects"""
     pass
 
 
 @commands.command()
 @click.argument("out_path", envvar="TRANSPIRE_OBJECT_OUTPUT", type=click.Path())
-def build(out_path, **kwargs) -> None:
+def build(out_path, **_) -> None:
     """build objects, write them to a folder"""
     config = ClusterConfig.from_cwd()
     modules = [
@@ -49,7 +49,7 @@ def build(out_path, **kwargs) -> None:
 
 @commands.command("print")
 @click.argument("app_name", required=False)
-def list_manifests(app_name: Optional[str] = None, **kwargs) -> None:
+def list_manifests(app_name: Optional[str] = None, **_) -> None:
     """build objects, print them to stdout"""
     module = get_config(app_name)
     yaml.safe_dump_all(module.objects, sys.stdout)
@@ -57,8 +57,6 @@ def list_manifests(app_name: Optional[str] = None, **kwargs) -> None:
 
 @commands.command()
 @click.argument("app_name", required=True)
-def apply(app_name: str, **kwargs) -> None:
+def apply(app_name: str, **_):
     """build objects, apply them to current kubernetes context"""
-    # module = get_config(app_name)
-    # module.objects
-    raise NotImplementedError("Not yet implemented!")
+    return NotImplemented

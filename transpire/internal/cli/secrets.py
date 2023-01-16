@@ -5,14 +5,14 @@ from transpire.internal.config import get_config, provider_from_context
 
 
 @click.group()
-def commands(**kwargs):
+def commands(**_):
     """secret management commands"""
     pass
 
 
 @commands.command()
 @click.argument("app_name", required=True)
-def push(app_name: str, **kwargs) -> None:
+def push(app_name: str, **_) -> None:
     """build secrets from this repository -> push to vault"""
     module = get_config(app_name)
     provider = provider_from_context(module.namespace)
@@ -25,7 +25,7 @@ def push(app_name: str, **kwargs) -> None:
 @commands.command()
 @click.option("-n", "--namespace")
 @click.argument("name", required=True)
-def pull(namespace: str, name: str, **kwargs) -> None:
+def pull(namespace: str, name: str, **_) -> None:
     """get secret from kubernetes -> push to vault"""
     config.load_kube_config()
     v1 = client.CoreV1Api()
