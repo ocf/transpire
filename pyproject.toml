@@ -3,7 +3,7 @@ name = "transpire"
 version = "0.1.0"
 description = "the OCF Kubernetes helper library"
 authors = ["Nikhil Jha <njha@ocf.berkeley.edu>"]
-license = "LGPL"
+license = "Apache-2.0"
 
 [tool.poetry.scripts]
 transpire = 'transpire.__main__:cli'
