@@ -48,10 +48,10 @@ def write_manifests(
 
     if failed:
         logger.error("Exceptions encountered, manifests will not be written.")
-
-    for fname, obj in processed_objs.items():
-        with open(appdir / fname, "w") as f:
-            yaml.safe_dump(obj, f)
+    else:
+        for fname, obj in processed_objs.items():
+            with open(appdir / fname, "w") as f:
+                yaml.safe_dump(obj, f)
 
 
 def write_base(basedir: Path, module: Module):
