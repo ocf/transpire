@@ -8,10 +8,10 @@ class Deployment:
     def simple(
         name: str,
         image: str,
-        command: List[str],
         ports: List[Union[str, int]],
-        configs_env: List[str] | None,
-        secrets_env: List[str] | None,
+        command: List[str] | None = None,
+        configs_env: List[str] | None = None,
+        secrets_env: List[str] | None = None,
     ):
         return client.V1Deployment(
             api_version="apps/v1",
