@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from argo_workflows.model_utils import model_to_dict
 from kubernetes import client, config
@@ -12,7 +13,7 @@ def main():
     module_config = GitModuleConfig(
         git=os.environ["GIT_URL"],
         branch=os.environ["GIT_BRANCH"],
-        dir=os.environ["DIR"],
+        dir=Path(os.environ["DIR"]),
     )
 
     module = module_config.load_module(None)

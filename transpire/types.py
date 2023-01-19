@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextvars import Context
 from functools import cached_property
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Iterable, List, Protocol
+from typing import Any, Callable, Iterable, List, Protocol, TypeVar
 
 from hera import Env, SecretVolume, Task, Volume, Workflow
 from kubernetes import client
 from pydantic import BaseModel, Field
 
 from transpire.internal import config, context
+
+_T = TypeVar("_T")
 
 
 class ToDict(Protocol):
@@ -107,14 +110,24 @@ class Module:
         if self.glob_context is not None:
             context.set_global_context(self.glob_context)
 
-    def _render_iter(self, function: str) -> Iterable[Any]:
-        def _list() -> Iterable[Any]:
+    def _render_fn(
+        self, function: str, finalizer: Callable[[Any], _T], default: _T
+    ) -> _T:
+        def _list() -> Any:
             self._enter_context()
             if hasattr(self.pymodule, function):
-                return list(getattr(self.pymodule, function)())
-            return []
+                return finalizer(getattr(self.pymodule, function)())
+            return default
 
         return Context().run(_list)
+
+    def _render_iter(self, function: str) -> list[Any]:
+        def finalizer(gen: Any) -> list[Any]:
+            if not isinstance(gen, Generator):
+                raise ValueError(f"function `{function}` must be a generator")
+            return list(gen)
+
+        return self._render_fn(function=function, finalizer=finalizer, default=[])
 
     @cached_property
     def images(self) -> List[Image]:
@@ -124,9 +137,16 @@ class Module:
     def objects(self) -> List[dict]:
         return list(manifests_to_dict(self._render_iter("objects")))
 
-    @cached_property
-    def pipeline(self) -> List[dict]:
-        return list(manifests_to_dict(self._render_iter("pipeline")))
+    def pipeline(self) -> List[Task] | Task:
+        def finalizer(val: Any) -> List[Task] | Task:
+            if isinstance(val, Task):
+                return val
+            if isinstance(val, list):
+                if all(isinstance(x, Task) for x in val):
+                    return val
+            raise ValueError("function `pipeline` must return Task or list[Task]")
+
+        return self._render_fn("pipeline", finalizer=finalizer, default=[])
 
     def workflow(self) -> Workflow:
         if self.config is None or not isinstance(self.config, config.GitModuleConfig):
@@ -188,6 +208,14 @@ class Module:
                 for image in self.images
             ]
 
-            self.pipeline >> clone >> build
+            # IMPORTANT: this type error is being ignored because this very specific
+            # case executes correctly. Since `clone` is a single task,
+            # `self.pipeline() >> clone` will also evaluate to a single task - either
+            # `self.pipeline()` is `list[Task]`, causing `Task.__rrshift__` to be
+            # invoked, which returns Task, OR `self.pipeline()` is `Task`, which
+            # invokes `Task.__rshift__`, which returns the RHS (`clone`), which is a
+            # `Task`. If `clone` ever becomes a list, this breaks (since there is no
+            # way for Hera to override `list >> list`).
+            self.pipeline() >> clone >> build  # type: ignore
 
         return w

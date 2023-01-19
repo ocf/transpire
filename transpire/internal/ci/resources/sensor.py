@@ -14,7 +14,7 @@ return {event_name=event_name, url=url, branch=branch}
 def build(config: CIConfig):
     with Workflow(
         "transpire-ci",
-        generate_name="transpire-ci-",
+        generate_name=True,
         service_account_name="transpire-ci",
         parameters=[
             Parameter("git", value="<<PLACEHOLDER>>"),
