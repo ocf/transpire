@@ -45,7 +45,7 @@ class Image(BaseModel):
     path: Path
 
     @property
-    def resolved_path(self):
+    def resolved_path(self) -> Path:
         if self.path.is_absolute():
             return self.path.relative_to("/")
         return self.path
@@ -83,13 +83,13 @@ class Module:
     """Transpire modules contain information about how to build and deploy applications to Kubernetes."""
 
     pymodule: ModuleType
-    config: "config.ModuleConfig" | None
+    config: config.ModuleConfig | None
 
     def __init__(
         self,
         pymodule: ModuleType,
         context=None,
-        config: "config.ModuleConfig" | None = None,
+        config: config.ModuleConfig | None = None,
     ):
         self.pymodule = pymodule
         self.glob_context = context
@@ -105,7 +105,7 @@ class Module:
             return self.pymodule.namespace
         return self.pymodule.name
 
-    def _enter_context(self):
+    def _enter_context(self) -> None:
         context.set_app_context(self)
         if self.glob_context is not None:
             context.set_global_context(self.glob_context)

@@ -1,4 +1,4 @@
-from argo_workflows.model_utils import model_to_dict
+from argo_workflows.model_utils import model_to_dict  # type: ignore
 from hera import Env, Parameter, Task, Workflow
 
 from transpire.internal.config import CIConfig

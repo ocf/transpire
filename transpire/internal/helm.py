@@ -106,7 +106,7 @@ def build_chart(
     # <https://github.com/yaml/pyyaml/issues/89>
     # <https://github.com/allenporter/k8s-gitops/commit/304c64c57926d2747328c0803c246be7dd827fdd>
     yaml.constructor.SafeConstructor.add_constructor(
-        "tag:yaml.org,2002:value", yaml.constructor.SafeConstructor.construct_yaml_str
+        "tag:yaml.org,2002:value", yaml.constructor.SafeConstructor.construct_yaml_str  # type: ignore
     )
 
     return list(yaml.safe_load_all(stdout))

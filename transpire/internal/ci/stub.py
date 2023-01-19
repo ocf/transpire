@@ -1,13 +1,13 @@
 import os
 from pathlib import Path
 
-from argo_workflows.model_utils import model_to_dict
+from argo_workflows.model_utils import model_to_dict  # type: ignore
 from kubernetes import client, config
 
 from transpire.internal.config import GitModuleConfig
 
 
-def main():
+def main() -> None:
     # TODO: Dependencies?????
 
     module_config = GitModuleConfig(

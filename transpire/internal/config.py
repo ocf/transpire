@@ -96,13 +96,13 @@ def load_py_module_from_file(
 
 class ModuleConfig(ABC):
     @abstractmethod
-    def load_py_module(self, name: str) -> ModuleType:
+    def load_py_module(self, name: str | None) -> ModuleType:
         ...
 
-    def load_module(self, name: str) -> Module:
+    def load_module(self, name: str | None) -> Module:
         return Module(self.load_py_module(name), config=self)
 
-    def load_module_w_context(self, name: str, context):
+    def load_module_w_context(self, name: str | None, context):
         return Module(self.load_py_module(name), context=context, config=self)
 
 
@@ -111,7 +111,7 @@ class LocalModuleConfig(ModuleConfig, BaseModel):
         description="The path to the transpire config file within the module"
     )
 
-    def load_py_module(self, name: str) -> ModuleType:
+    def load_py_module(self, name: str | None) -> ModuleType:
         # TODO: do something about the implicit assumption that cwd == root of cluster repo
         # TODO: handle escaping file stem, make ".transpire.py" sane
         return load_py_module_from_file(
@@ -136,7 +136,7 @@ class GitModuleConfig(ModuleConfig, BaseModel):
     )
 
     @property
-    def resolved_dir(self):
+    def resolved_dir(self) -> Path:
         if self.dir.is_absolute():
             return self.dir.relative_to("/")
         return self.dir
@@ -181,7 +181,7 @@ class GitModuleConfig(ModuleConfig, BaseModel):
         )
         return cache_dir
 
-    def load_py_module(self, name: str) -> ModuleType:
+    def load_py_module(self, name: str | None) -> ModuleType:
         cache_dir = self.get_cached_repo()
         return load_py_module_from_file(
             "_transpire", cache_dir / self.resolved_dir / ".transpire.py", name
