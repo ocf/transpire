@@ -688,7 +688,7 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "43eb73f47a48b784aa314aac2cd1b958e5af791fabfc611376132d9d6aaa0eeb"
+content-hash = "1c1ee87f7f7ecb2dadb4fba7ec999efd7577995590b343dad89fbafe4883b55b"
 
 [metadata.files]
 argo-workflows = []
