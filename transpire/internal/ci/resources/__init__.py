@@ -8,6 +8,7 @@ from transpire.internal.ci.resources import (
     sensor,
     service,
     service_account,
+    service_account_builder,
 )
 from transpire.internal.config import CIConfig
 
@@ -19,6 +20,7 @@ def build(config: CIConfig):
         cluster_role.build(config),
         cluster_role_binding.build(config),
         service_account.build(config),
+        service_account_builder.build(config),
         secret.build(config),
         event_bus.build(config),
         event_source.build(config),
