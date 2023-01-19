@@ -1,59 +1,61 @@
+from typing import Any
+
 import pytest
 
 from transpire.surgery import delve, edit_manifests, make_edit_manifest, shelve
 
 
 class TestDelve:
-    def test_basic_functionality(self):
+    def test_basic_functionality(self) -> None:
         val = object()
         obj = {"a": {"b": {"c": val}, "d": True}}
         assert delve(obj, ("a", "b", "c")) is val
 
-    def test_returns_none_on_nonexistent_key(self):
+    def test_returns_none_on_nonexistent_key(self) -> None:
         obj = {"a": {"b": {"c": "foo"}, "d": True}}
         assert delve(obj, ("a", "b", "nonexistent")) is None
 
 
 class TestShelve:
-    def test_basic_functionality(self):
+    def test_basic_functionality(self) -> None:
         obj = {"a": {"b": {"c": "foo"}, "d": True}}
         expected = {"a": {"b": {"c": "bar"}, "d": True}}
         assert shelve(obj, ("a", "b", "c"), "bar") == expected
         assert obj == expected
 
-    def test_create_key(self):
+    def test_create_key(self) -> None:
         obj = {"a": {"c": "d"}}
         expected = {"a": {"c": "d", "foo": "bar"}}
         assert shelve(obj, ("a", "foo"), "bar") == expected
         assert obj == expected
 
-    def test_parent_creation(self):
-        obj = {}
+    def test_parent_creation(self) -> None:
+        obj: dict[str, Any] = {}
         expected = {"a": {"b": {"c": "bar"}}}
         assert shelve(obj, ("a", "b", "c"), "bar", create_parents=True) == expected
         assert obj == expected
 
-    def test_missing_segment(self):
+    def test_missing_segment(self) -> None:
         obj = {"a": {"c": "d"}}
         key = "foo"
         with pytest.raises(KeyError, match=key):
             shelve(obj, ("a", key, "junk"), "junk")
 
-    def test_empty_path(self):
-        obj = {}
+    def test_empty_path(self) -> None:
+        obj: dict[str, Any] = {}
         expected = "foo"
         assert shelve(obj, [], expected) == expected
 
 
 class TestEditManifest:
-    def make_manifest(self, apiVersion, kind, name):
+    def make_manifest(self, apiVersion, kind, name) -> dict:
         return {
             "apiVersion": apiVersion,
             "kind": kind,
             "metadata": {"name": name},
         }
 
-    def test_basic(self):
+    def test_basic(self) -> None:
         const = lambda v: lambda x: v  # noqa: E731
 
         manifests = [
@@ -76,7 +78,7 @@ class TestEditManifest:
             self.make_manifest("networking.k8s.io/v1", "Ingress", "ingress2"),
         ]
 
-    def test_unapplied_edit(self):
+    def test_unapplied_edit(self) -> None:
         id = lambda x: x  # noqa: E731
 
         manifests = [
@@ -102,7 +104,7 @@ class TestEditManifest:
 
 
 class TestMakeEditManifest:
-    def test_basic(self):
+    def test_basic(self) -> None:
         obj = {"a": {"b": {"c": "foo"}, "d": 1}}
         expected = {"a": {"b": {"c": "bar"}, "d": 2, "new": "value"}}
         edit = make_edit_manifest(
@@ -115,7 +117,7 @@ class TestMakeEditManifest:
         assert edit(obj) == expected
         assert obj == expected
 
-    def test_with_edit_manifests(self):
+    def test_with_edit_manifests(self) -> None:
         manifests = [
             {
                 "apiVersion": "v1",
