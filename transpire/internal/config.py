@@ -4,13 +4,13 @@ import os
 import re
 import shutil
 import subprocess
+import tomllib
 from abc import ABC, abstractmethod
-from functools import cache, cached_property
+from functools import cache
 from pathlib import Path
 from types import ModuleType
 from typing import Literal, Optional
 
-import tomllib
 from pydantic import AnyUrl, BaseModel, Field, HttpUrl
 
 from transpire.internal.secrets import SecretsProvider
@@ -32,7 +32,9 @@ def first_env(*args: str, default: str | None = None) -> str:
 
     if len(args) == 0:
         if default is None:
-            raise KeyError("Unable to pull from environment, and no default was provided.")
+            raise KeyError(
+                "Unable to pull from environment, and no default was provided."
+            )
         return default
     return os.environ.get(args[0], first_env(*args[1:], default=default))
 
@@ -42,21 +44,35 @@ class CLIConfig(BaseModel):
 
     git_path: Path = Field(description="Path to the git executable", default="git")
     cache_dir: Path = Field(description="The directory where cached files are stored")
-    config_dir: Path = Field(description="The directory where transpire should write its persistent config files")
+    config_dir: Path = Field(
+        description="The directory where transpire should write its persistent config files"
+    )
 
     @classmethod
     @cache
     def from_env(cls) -> "CLIConfig":
         """pull configuration from environment variables, falling back to defaults as neccesary"""
         # TRANSPIRE_CACHE_DIR > XDG_CACHE_HOME > ~/.cache/
-        cache_dir = Path(first_env("TRANSPIRE_CACHE_DIR", "XDG_CACHE_HOME", default="~/.cache")) / "transpire"
+        cache_dir = (
+            Path(first_env("TRANSPIRE_CACHE_DIR", "XDG_CACHE_HOME", default="~/.cache"))
+            / "transpire"
+        )
 
         # TRANSPIRE_CONFIG_DIR > XDG_CONFIG_HOME > ~/.config/
-        config_dir = Path(first_env("TRANSPIRE_CONFIG_DIR", "XDG_CONFIG_HOME", default="~/.config")) / "transpire"
+        config_dir = (
+            Path(
+                first_env(
+                    "TRANSPIRE_CONFIG_DIR", "XDG_CONFIG_HOME", default="~/.config"
+                )
+            )
+            / "transpire"
+        )
         return cls(cache_dir=cache_dir.expanduser(), config_dir=config_dir.expanduser())
 
 
-def load_py_module_from_file(py_mod_name: str, path: Path, expected_app_name: str | None = None) -> ModuleType:
+def load_py_module_from_file(
+    py_mod_name: str, path: Path, expected_app_name: str | None = None
+) -> ModuleType:
     spec = importlib.util.spec_from_file_location(py_mod_name, path)
     if spec is None or spec.loader is None:
         raise ValueError(f"No Python module was found at {path}")
@@ -67,9 +83,13 @@ def load_py_module_from_file(py_mod_name: str, path: Path, expected_app_name: st
     try:
         real_app_name = module.name
     except AttributeError:
-        raise ValueError(f"Python module at {path} does not appear to be a transpire module - missing `name'")
+        raise ValueError(
+            f"Python module at {path} does not appear to be a transpire module - missing `name'"
+        )
     if expected_app_name is not None and real_app_name != expected_app_name:
-        raise ValueError(f"Python module at {path} has wrong name: expected {expected_app_name}, got {real_app_name}")
+        raise ValueError(
+            f"Python module at {path} has wrong name: expected {expected_app_name}, got {real_app_name}"
+        )
 
     return module
 
@@ -87,7 +107,9 @@ class ModuleConfig(ABC):
 
 
 class LocalModuleConfig(ModuleConfig, BaseModel):
-    path: Path = Field(description="The path to the transpire config file within the module")
+    path: Path = Field(
+        description="The path to the transpire config file within the module"
+    )
 
     def load_py_module(self, name: str) -> ModuleType:
         # TODO: do something about the implicit assumption that cwd == root of cluster repo
@@ -105,9 +127,13 @@ class LocalModuleConfig(ModuleConfig, BaseModel):
 
 
 class GitModuleConfig(ModuleConfig, BaseModel):
-    git: AnyUrl = Field(description="The URL of the remote git repository the module resides in")
+    git: AnyUrl = Field(
+        description="The URL of the remote git repository the module resides in"
+    )
     branch: str | None = Field(description="The branch to deploy from")
-    dir: Path = Field(description="The root path containing the module", default=Path("."))
+    dir: Path = Field(
+        description="The root path containing the module", default=Path(".")
+    )
 
     @property
     def resolved_dir(self):
@@ -150,12 +176,16 @@ class GitModuleConfig(ModuleConfig, BaseModel):
                 return cache_dir
 
         cache_dir.mkdir(exist_ok=True, parents=True)
-        subprocess.check_call([config.git_path, *self.clone_args(), cache_dir], cwd=modules_cache_dir)
+        subprocess.check_call(
+            [config.git_path, *self.clone_args(), cache_dir], cwd=modules_cache_dir
+        )
         return cache_dir
 
     def load_py_module(self, name: str) -> ModuleType:
         cache_dir = self.get_cached_repo()
-        return load_py_module_from_file("_transpire", cache_dir / self.resolved_dir / ".transpire.py", name)
+        return load_py_module_from_file(
+            "_transpire", cache_dir / self.resolved_dir / ".transpire.py", name
+        )
 
 
 class CIConfig(BaseModel):
@@ -170,7 +200,9 @@ class ClusterConfig(BaseModel):
 
     class SecretsConfig(BaseModel):
         provider: Literal["vault"] = Field(description="secrets provider to use")
-        vault: Optional[HashicorpVaultConfig] = Field(description="configuration for bitnami sealed secrets")
+        vault: Optional[HashicorpVaultConfig] = Field(
+            description="configuration for bitnami sealed secrets"
+        )
 
     apiVersion: Literal["v1"]
     secrets: SecretsConfig = Field(description="configuration for the secrets provider")
@@ -188,7 +220,9 @@ class ClusterConfig(BaseModel):
         if cluster_toml.exists():
             return cls.parse_obj(tomllib.loads(cluster_toml.read_text()))
         if cwd.is_mount() or (cwd / ".git").exists():
-            raise FileNotFoundError("cluster.toml not found up to current git or fs boundary")
+            raise FileNotFoundError(
+                "cluster.toml not found up to current git or fs boundary"
+            )
         return cls.from_cwd(cwd.parent)
 
 
@@ -196,20 +230,28 @@ def get_config(module_name: str | None = None, cwd: Path = Path.cwd()) -> Module
     if module_name:
         cluster_config = ClusterConfig.from_cwd(cwd)
         module = cluster_config.modules.get(module_name)
-        if module is not None and isinstance(module, (LocalModuleConfig, GitModuleConfig)):
+        if module is not None and isinstance(
+            module, (LocalModuleConfig, GitModuleConfig)
+        ):
             return module.load_module_w_context(module_name, context=cluster_config)
         cluster_toml = cwd / "cluster.toml"
-        raise ValueError(f"Python module at {cluster_toml} is missing module {module_name}")
+        raise ValueError(
+            f"Python module at {cluster_toml} is missing module {module_name}"
+        )
 
     transpire_py = cwd / ".transpire.py"
     if transpire_py.exists():
         return Module(load_py_module_from_file("_transpire", transpire_py, None))
     if cwd.is_mount() or (cwd / ".git").exists():
-        raise FileNotFoundError(".transpire.py not found up to current git or fs boundary")
+        raise FileNotFoundError(
+            ".transpire.py not found up to current git or fs boundary"
+        )
     return get_config(module_name, cwd.parent)
 
 
-def provider_from_context(namespace: str, dev: bool = False, config: ClusterConfig | None = None) -> SecretsProvider:
+def provider_from_context(
+    namespace: str, dev: bool = False, config: ClusterConfig | None = None
+) -> SecretsProvider:
     if not config:
         config = ClusterConfig.from_cwd()
     if config.secrets.provider == "vault":

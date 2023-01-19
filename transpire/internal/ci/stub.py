@@ -20,7 +20,9 @@ def main():
 
     config.load_incluster_config()
     api = client.CustomObjectsApi()
-    api.create_namespaced_custom_object("argoproj.io", "v1alpha1", "transpire", "workflows", workflow)
+    api.create_namespaced_custom_object(
+        "argoproj.io", "v1alpha1", "transpire", "workflows", workflow
+    )
 
 
 if __name__ == "__main__":

@@ -65,7 +65,9 @@ def build(config: CIConfig):
                         "name": "transpire-stub",
                         "argoWorkflow": {
                             "operation": "submit",
-                            "source": {"resource": model_to_dict(w.build(), serialize=True)},
+                            "source": {
+                                "resource": model_to_dict(w.build(), serialize=True)
+                            },
                             "parameters": [
                                 {
                                     "src": {

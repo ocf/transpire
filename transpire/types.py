@@ -28,7 +28,9 @@ class Version(BaseModel):
     """An adelie (github.com/nikhiljha/adelie) compatible version definition."""
 
     version: str
-    github: str | None = Field(description="A GitHub repository URL, used for release version checking.")
+    github: str | None = Field(
+        description="A GitHub repository URL, used for release version checking."
+    )
     helm: str | None
     chart: str | None
 
@@ -78,9 +80,14 @@ class Module:
     """Transpire modules contain information about how to build and deploy applications to Kubernetes."""
 
     pymodule: ModuleType
-    config: "config.ModuleConfig"
+    config: "config.ModuleConfig" | None
 
-    def __init__(self, pymodule: ModuleType, context=None, config: "config.ModuleConfig" | None = None):
+    def __init__(
+        self,
+        pymodule: ModuleType,
+        context=None,
+        config: "config.ModuleConfig" | None = None,
+    ):
         self.pymodule = pymodule
         self.glob_context = context
         self.config = config
@@ -126,9 +133,15 @@ class Module:
             # this is kinda janky but idk how to resolve it
             raise ValueError("Only git modules can run ci")
 
-        with Workflow(f"{self.name}-ci", generate_name=True, service_account_name="transpire-ci-builder") as w:
+        with Workflow(
+            f"{self.name}-ci",
+            generate_name=True,
+            service_account_name="transpire-ci-builder",
+        ) as w:
             # TODO: Fix storage class default
-            volume = Volume(size="25Gi", mount_path="/build", storage_class_name="rbd-nvme")
+            volume = Volume(
+                size="25Gi", mount_path="/build", storage_class_name="rbd-nvme"
+            )
 
             clone = Task(
                 "clone",
@@ -144,7 +157,10 @@ class Module:
                     image="moby/buildkit:v0.10.6-rootless",
                     command=["buildctl-daemonless.sh"],
                     env=[
-                        Env(name="BUILDKITD_FLAGS", value="--oci-worker-no-process-sandbox"),
+                        Env(
+                            name="BUILDKITD_FLAGS",
+                            value="--oci-worker-no-process-sandbox",
+                        ),
                         Env(name="DOCKER_CONFIG", value="/docker"),
                     ],
                     args=[
@@ -161,7 +177,11 @@ class Module:
                     ],
                     volumes=[
                         volume,
-                        SecretVolume(secret_name="harbor-credentials", mount_path="/docker", name="harbor-credentials"),
+                        SecretVolume(
+                            secret_name="harbor-credentials",
+                            mount_path="/docker",
+                            name="harbor-credentials",
+                        ),
                     ],
                     working_dir="/build/build",
                 )
