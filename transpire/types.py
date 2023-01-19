@@ -6,7 +6,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Iterable, List, Protocol
 
-from hera import Env, Task, Volume, Workflow
+from hera import Env, SecretVolume, Task, Volume, Workflow
 from kubernetes import client
 from pydantic import BaseModel, Field
 
@@ -126,15 +126,16 @@ class Module:
             # this is kinda janky but idk how to resolve it
             raise ValueError("Only git modules can run ci")
 
-        with Workflow(f"{self.name}-ci") as w:
-            volume = Volume(size="25Gi", mount_path="/build")
+        with Workflow(f"{self.name}-ci", generate_name=True, service_account_name="transpire-ci-builder") as w:
+            # TODO: Fix storage class default
+            volume = Volume(size="25Gi", mount_path="/build", storage_class_name="rbd-nvme")
 
             clone = Task(
                 "clone",
                 image="alpine/git:2.36.3",
                 args=[*self.config.clone_args(), "."],
                 volumes=[volume],
-                working_dir="/build",
+                working_dir="/build/build",
             )
 
             build = [
@@ -143,25 +144,26 @@ class Module:
                     image="moby/buildkit:v0.10.6-rootless",
                     command=["buildctl-daemonless.sh"],
                     env=[
-                        Env(
-                            name="BUILDKITD_FLAGS",
-                            value="--oci-worker-no-process-sandbox",
-                        )
+                        Env(name="BUILDKITD_FLAGS", value="--oci-worker-no-process-sandbox"),
+                        Env(name="DOCKER_CONFIG", value="/docker"),
                     ],
                     args=[
                         "build",
                         "--frontend",
                         "dockerfile.v0",
                         "--local",
-                        "context=.",
+                        f"context={image.resolved_path}",
                         "--local",
-                        "dockerfile=",
-                        image.resolved_path,
+                        f"dockerfile={image.resolved_path}",
                         "--output",
                         # TODO: Get the git hash
-                        f"type=image,name=harbor.ocf.berkeley.edu/{self.name}/{image.name}:latest",
+                        f"type=image,name=harbor.ocf.berkeley.edu/ocf/{self.name}/{image.name}:latest,push=true",
                     ],
-                    volumes=[volume],
+                    volumes=[
+                        volume,
+                        SecretVolume(secret_name="harbor-credentials", mount_path="/docker", name="harbor-credentials"),
+                    ],
+                    working_dir="/build/build",
                 )
                 for image in self.images
             ]
