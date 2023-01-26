@@ -7,7 +7,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Iterable, List, Protocol, TypeVar
 
-from hera import Env, SecretVolume, Task, Volume, Workflow
+from hera import Env, Parameter, SecretVolume, Task, ValueFrom, Volume, Workflow
 from kubernetes import client
 from pydantic import BaseModel, Field
 
@@ -174,6 +174,14 @@ class Module:
                 working_dir="/build/build",
             )
 
+            get_hash = Task(
+                "hash",
+                image="alpine/git:2.36.3",
+                args=["rev-parse", "HEAD"],
+                volumes=[volume],
+                working_dir="/build/build",
+            )
+
             build = [
                 Task(
                     "build",
@@ -195,8 +203,12 @@ class Module:
                         "--local",
                         f"dockerfile={image.resolved_path}",
                         "--output",
-                        # TODO: Get the git hash
-                        f"type=image,name=harbor.ocf.berkeley.edu/ocf/{self.name}/{image.name}:latest,push=true",
+                        (
+                            "type=image,"
+                            f"name=harbor.ocf.berkeley.edu/ocf/{self.name}/{image.name}:latest,"
+                            f"name=harbor.ocf.berkeley.edu/ocf/{self.name}/{image.name}:{{{{tasks.hash.outputs.result}}}},"
+                            "push=true"
+                        ),
                     ],
                     volumes=[
                         volume,
@@ -219,6 +231,6 @@ class Module:
             # invokes `Task.__rshift__`, which returns the RHS (`clone`), which is a
             # `Task`. If `clone` ever becomes a list, this breaks (since there is no
             # way for Hera to override `list >> list`).
-            self.pipeline() >> clone >> build  # type: ignore
+            self.pipeline() >> clone >> get_hash >> build  # type: ignore
 
         return w
