@@ -11,7 +11,9 @@ from hera import Env, SecretVolume, Task, Volume, Workflow
 from kubernetes import client
 from pydantic import BaseModel, Field
 
-from transpire.internal import config, context
+# `config` is imported as `config_`, to avoid shadowing issue with mypy
+from transpire.internal import config as config_
+from transpire.internal import context
 
 _T = TypeVar("_T")
 
@@ -83,13 +85,13 @@ class Module:
     """Transpire modules contain information about how to build and deploy applications to Kubernetes."""
 
     pymodule: ModuleType
-    config: config.ModuleConfig | None
+    config: config_.ModuleConfig | None
 
     def __init__(
         self,
         pymodule: ModuleType,
         context=None,
-        config: config.ModuleConfig | None = None,
+        config: config_.ModuleConfig | None = None,
     ):
         self.pymodule = pymodule
         self.glob_context = context
@@ -146,10 +148,11 @@ class Module:
                     return val
             raise ValueError("function `pipeline` must return Task or list[Task]")
 
-        return self._render_fn("pipeline", finalizer=finalizer, default=[])
+        # mypy bug causing something to be inferred as List[<nothing>]
+        return self._render_fn("pipeline", finalizer=finalizer, default=[])  # type: ignore
 
     def workflow(self) -> Workflow:
-        if self.config is None or not isinstance(self.config, config.GitModuleConfig):
+        if self.config is None or not isinstance(self.config, config_.GitModuleConfig):
             # this is kinda janky but idk how to resolve it
             raise ValueError("Only git modules can run ci")
 
