@@ -96,14 +96,14 @@ def load_py_module_from_file(
 
 class ModuleConfig(ABC):
     @abstractmethod
-    def load_py_module(self, name: str) -> ModuleType:
+    def load_py_module(self, name: str | None) -> ModuleType:
         ...
 
-    def load_module(self, name: str) -> Module:
-        return Module(self.load_py_module(name))
+    def load_module(self, name: str | None) -> Module:
+        return Module(self.load_py_module(name), config=self)
 
-    def load_module_w_context(self, name: str, context):
-        return Module(self.load_py_module(name), context=context)
+    def load_module_w_context(self, name: str | None, context):
+        return Module(self.load_py_module(name), context=context, config=self)
 
 
 class LocalModuleConfig(ModuleConfig, BaseModel):
@@ -111,7 +111,7 @@ class LocalModuleConfig(ModuleConfig, BaseModel):
         description="The path to the transpire config file within the module"
     )
 
-    def load_py_module(self, name: str) -> ModuleType:
+    def load_py_module(self, name: str | None) -> ModuleType:
         # TODO: do something about the implicit assumption that cwd == root of cluster repo
         # TODO: handle escaping file stem, make ".transpire.py" sane
         return load_py_module_from_file(
@@ -134,6 +134,23 @@ class GitModuleConfig(ModuleConfig, BaseModel):
     dir: Path = Field(
         description="The root path containing the module", default=Path(".")
     )
+
+    @property
+    def resolved_dir(self) -> Path:
+        if self.dir.is_absolute():
+            return self.dir.relative_to("/")
+        return self.dir
+
+    def clone_args(self) -> list[str]:
+        branch_args = [] if self.branch is None else ["--branch", self.branch]
+        return [
+            "clone",
+            "--depth",
+            "1",
+            "--single-branch",
+            *branch_args,
+            self.git,
+        ]
 
     def get_cached_repo(self) -> Path:
         config = CLIConfig.from_env()
@@ -159,26 +176,15 @@ class GitModuleConfig(ModuleConfig, BaseModel):
                 return cache_dir
 
         cache_dir.mkdir(exist_ok=True, parents=True)
-        branch_args = [] if self.branch is None else ["--branch", self.branch]
         subprocess.check_call(
-            [
-                config.git_path,
-                "clone",
-                "--depth",
-                "1",
-                "--single-branch",
-                *branch_args,
-                self.git,
-                cache_dir,
-            ],
-            cwd=modules_cache_dir,
+            [config.git_path, *self.clone_args(), cache_dir], cwd=modules_cache_dir
         )
         return cache_dir
 
-    def load_py_module(self, name: str) -> ModuleType:
+    def load_py_module(self, name: str | None) -> ModuleType:
         cache_dir = self.get_cached_repo()
         return load_py_module_from_file(
-            "_transpire", cache_dir / self.dir / ".transpire.py", name
+            "_transpire", cache_dir / self.resolved_dir / ".transpire.py", name
         )
 
 

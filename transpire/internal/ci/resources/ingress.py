@@ -26,7 +26,7 @@ def build(config: CIConfig):
                                 "pathType": "Prefix",
                                 "backend": {
                                     "service": {
-                                        "name": "transpire-github-eventsource-svc",
+                                        "name": "transpire-github",
                                         "port": {"number": 12000},
                                     }
                                 },
