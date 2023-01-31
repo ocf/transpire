@@ -195,6 +195,11 @@ class CIConfig(BaseModel):
     webhook_url: HttpUrl = Field(description="github webhook url")
 
 
+class ClusterDefaults(BaseModel):
+    ingressClass: str | None
+    certManagerIssuer: str | None
+
+
 class ClusterConfig(BaseModel):
     """Cluster configuration"""
 
@@ -212,6 +217,7 @@ class ClusterConfig(BaseModel):
     ] = Field(description="list of modules to load")
 
     ci: CIConfig
+    defaults: ClusterDefaults
 
     @classmethod
     @cache

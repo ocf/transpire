@@ -3,7 +3,7 @@ from collections.abc import Callable, Iterable
 from transpire.internal.surgery import delve
 from transpire.internal.surgery import edit_manifests as _edit_manifests
 from transpire.internal.surgery import make_edit_manifest, shelve
-from transpire.types import ManifestLike, manifests_to_dict
+from transpire.manifestlike import ManifestLike, manifests_to_dict
 
 
 def edit_manifests(

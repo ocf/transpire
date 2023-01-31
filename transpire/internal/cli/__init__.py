@@ -2,8 +2,6 @@ import click
 
 from . import bootstrap, dev, obj, secrets
 
-__all__ = ["bootstrap", "cli", "dev", "obj", "secrets"]
-
 
 @click.group()
 def cli() -> None:

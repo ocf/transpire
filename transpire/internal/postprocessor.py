@@ -1,5 +1,5 @@
 from transpire.internal.config import ClusterConfig, provider_from_context
-from transpire.types import ManifestLike
+from transpire.manifestlike import ManifestLike
 
 
 class ManifestError(Exception):
