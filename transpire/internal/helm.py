@@ -33,10 +33,13 @@ def exec_helm(args: list[str], check: bool = True) -> tuple[bytes, bytes]:
             str(config.cache_dir / "helm" / "repositories.yaml"),
             *args,
         ],
-        check=check,
+        check=False,
         stdout=PIPE,
         stderr=PIPE,
     )
+
+    if check and process.returncode != 0:
+        raise ValueError(process.stderr)
 
     return (process.stdout, process.stderr)
 
