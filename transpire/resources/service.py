@@ -2,16 +2,18 @@ from typing import Union
 
 from kubernetes import client
 
+from transpire.resources.base import Resource
 
-class Service:
-    @staticmethod
-    def simple(
+
+class Service(Resource[client.V1Service]):
+    def __init__(
+        self,
         name: str,
         selector: dict[str, str],
         port_on_pod: Union[int, str],
         port_on_svc: Union[int, str],
     ):
-        return client.V1Service(
+        self.svc = client.V1Service(
             api_version="v1",
             kind="Service",
             metadata=client.V1ObjectMeta(name=name),

@@ -6,7 +6,7 @@ import hvac.exceptions  # type: ignore
 from pydantic import BaseModel
 
 from transpire.internal.secrets import SecretsProvider
-from transpire.types import ManifestLike, manifest_to_dict
+from transpire.manifestlike import ManifestLike, manifest_to_dict
 
 
 class HashicorpVaultConfig(BaseModel):

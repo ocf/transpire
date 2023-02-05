@@ -34,8 +34,8 @@ repos:
     require_serial: true
   - id: mypy
     name: mypy
-    entry: poetry run mypy
-    args: ["--scripts-are-modules"]
+    entry: poetry run mypy -p transpire
+    pass_filenames: false
     language: system
     types: [python]
     require_serial: true

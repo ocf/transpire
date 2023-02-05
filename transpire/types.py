@@ -1,32 +1,19 @@
-from __future__ import annotations
-
 from collections.abc import Generator
 from contextvars import Context
 from functools import cached_property
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Iterable, List, Protocol, TypeVar
+from typing import Any, Callable, List, TypeVar, Union
 
 from hera import Env, SecretVolume, Task, Volume, Workflow
-from kubernetes import client
 from pydantic import BaseModel, Field
 
 # `config` is imported as `config_`, to avoid shadowing issue with mypy
 from transpire.internal import config as config_
 from transpire.internal import context
+from transpire.manifestlike import manifests_to_dict
 
 _T = TypeVar("_T")
-
-
-class ToDict(Protocol):
-    """An object that can be converted to a dictionary. Useful for objects from github.com/kubernetes-client/python."""
-
-    def to_dict(self) -> dict:
-        ...
-
-
-# Something that is possibly a Kubernetes manifest. No validation is performed.
-ManifestLike = dict | ToDict
 
 
 class Version(BaseModel):
@@ -53,45 +40,17 @@ class Image(BaseModel):
         return self.path
 
 
-_api_client = client.ApiClient()
-
-
-def manifest_to_dict(obj: ManifestLike) -> dict:
-    if isinstance(obj, dict):
-        return obj
-    try:
-        return _api_client.sanitize_for_serialization(obj)
-    except AttributeError:
-        pass
-    raise TypeError(f"unsupported manifest type: {type(obj)}")
-
-
-def manifests_to_dict(
-    objs: ManifestLike | Iterable[ManifestLike | None],
-) -> Iterable[dict]:
-    objs_iter: Iterable[ManifestLike | None]
-    if isinstance(objs, dict):
-        objs_iter = [objs]
-    else:
-        if isinstance(objs, Iterable):
-            objs_iter = objs
-        else:
-            objs_iter = [objs]
-
-    return (manifest_to_dict(o) for o in objs_iter if o is not None)
-
-
 class Module:
     """Transpire modules contain information about how to build and deploy applications to Kubernetes."""
 
     pymodule: ModuleType
-    config: config_.ModuleConfig | None
+    config: Union["config_.ModuleConfig", None]
 
     def __init__(
         self,
         pymodule: ModuleType,
         context=None,
-        config: config_.ModuleConfig | None = None,
+        config: Union["config_.ModuleConfig", None] = None,
     ):
         self.pymodule = pymodule
         self.glob_context = context
