@@ -17,8 +17,8 @@ class Ingress(Resource[client.V1Ingress]):
         # TODO: Make sure there's only one port.
         return cls(
             host=host,
-            service_name=built.metadata.name,
-            service_port=built.spec.ports[0].port,
+            service_name=built["metadata"]["name"],
+            service_port=built["spec"]["ports"][0]["port"],
             path_prefix=path_prefix,
         )
 
@@ -76,3 +76,4 @@ class Ingress(Resource[client.V1Ingress]):
                 ],
             ),
         )
+        super().__init__()

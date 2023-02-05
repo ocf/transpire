@@ -3,24 +3,23 @@ from typing import Iterable, Protocol
 from kubernetes import client
 
 
-class ToDict(Protocol):
+class OpenAPIObject(Protocol):
     """An object that can be converted to a dictionary. Useful for objects from github.com/kubernetes-client/python."""
 
-    def to_dict(self) -> dict:
-        ...
+    openapi_types: dict
+    attribute_map: dict
 
 
 # Something that is possibly a Kubernetes manifest. No validation is performed.
-ManifestLike = dict | ToDict
-
+ManifestLike = dict | OpenAPIObject
 _api_client = client.ApiClient()
 
 
 def manifest_to_dict(obj: ManifestLike) -> dict:
-    if isinstance(obj, dict):
-        return obj
     try:
-        return _api_client.sanitize_for_serialization(obj)
+        sanitized = _api_client.sanitize_for_serialization(obj)
+        assert isinstance(sanitized, dict)
+        return sanitized
     except AttributeError:
         pass
     raise TypeError(f"unsupported manifest type: {type(obj)}")

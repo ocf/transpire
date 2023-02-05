@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Self, Union
 
 from kubernetes import client
 
@@ -41,6 +41,7 @@ class Deployment(Resource[client.V1Deployment]):
                 ),
             ),
         )
+        super().__init__()
 
     def _init_env(self, container_id: int) -> client.V1Container:
         container = self.obj.spec.template.spec.containers[container_id]
@@ -54,7 +55,7 @@ class Deployment(Resource[client.V1Deployment]):
 
     def with_configmap_env(
         self, name: str, *, mapping: dict[str, str] | None = None, container_id: int = 0
-    ) -> None:
+    ) -> Self:
         container = self._init_env(container_id)
         if mapping is None:
             container.env_from.append(
@@ -77,10 +78,11 @@ class Deployment(Resource[client.V1Deployment]):
                 )
                 for envvar_name, cm_key in mapping.items()
             )
+        return self
 
     def with_secrets_env(
         self, name: str, *, mapping: dict[str, str] | None = None, container_id: int = 0
-    ) -> None:
+    ) -> Self:
         container = self._init_env(container_id)
         if mapping is None:
             container.env_from.append(
@@ -103,6 +105,7 @@ class Deployment(Resource[client.V1Deployment]):
                 )
                 for envvar_name, secret_key in mapping.items()
             )
+        return self
 
     def get_container(
         self, name: str | None = None, *, remove: bool = False

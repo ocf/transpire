@@ -28,3 +28,4 @@ class Secret(Resource[client.V1Secret]):
             type=type,
             string_data=string_data,
         )
+        super().__init__()

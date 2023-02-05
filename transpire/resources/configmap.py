@@ -18,3 +18,4 @@ class ConfigMap(Resource[client.V1ConfigMap]):
             ),
             data=data,
         )
+        super().__init__()

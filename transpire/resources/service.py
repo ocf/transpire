@@ -13,7 +13,7 @@ class Service(Resource[client.V1Service]):
         port_on_pod: Union[int, str],
         port_on_svc: Union[int, str],
     ):
-        self.svc = client.V1Service(
+        self.obj = client.V1Service(
             api_version="v1",
             kind="Service",
             metadata=client.V1ObjectMeta(name=name),
@@ -22,3 +22,4 @@ class Service(Resource[client.V1Service]):
                 ports=[client.V1ServicePort(port=port_on_svc, target_port=port_on_pod)],
             ),
         )
+        super().__init__()

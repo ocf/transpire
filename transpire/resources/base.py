@@ -1,19 +1,23 @@
-from typing import Callable, Generic, TypeVar
+from typing import Callable, Generic, Self, TypeVar
 
-from transpire.manifestlike import ToDict
+from transpire.manifestlike import ManifestLike, manifest_to_dict
 
-T = TypeVar("T", bound=ToDict)
+T = TypeVar("T", bound=ManifestLike)
 
 
 class Resource(Generic[T]):
     obj: T
+    patches: list
 
-    def patch(self, *fns: Callable[[T], T]):
-        for f in fns:
-            self.obj = f(self.obj)
+    def __init__(self):
+        self.patches = []
 
-    def build(self) -> T:
-        return self.obj
+    def patch(self, *fns: Callable[[dict], dict]) -> Self:
+        self.patches.extend(fns)
+        return self
 
-    def to_dict(self) -> dict:
-        return self.obj.to_dict()
+    def build(self) -> dict:
+        out = manifest_to_dict(self.obj)
+        for patch in self.patches:
+            out = patch(out)
+        return out
