@@ -22,7 +22,9 @@ def build(module_name, output) -> None:
         module = config.modules[module_name].load_module(module_name)
 
         images = [{"name": x.name, "path": str(x.resolved_path)} for x in module.images]
-        output = {"images": images}
+
+        print(os.environ["GITHUB_OUTPUT"])
+        print(f"image_matrix={images}")
 
         with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-            click.echo(f"images={output}", file=f)
+            print(f"image_matrix={images}", file=f)

@@ -14,3 +14,5 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-dev
 
 COPY . .
+
+RUN poetry install --no-dev
