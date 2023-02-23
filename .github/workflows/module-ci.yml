@@ -44,6 +44,12 @@ jobs:
         id: metadata
         with:
           images: harbor.ocf.berkeley.edu/ocf/${{ inputs.module-name }}/${{ matrix.image.name }}
+          tags: |
+            type=sha
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
 
       - uses: docker/build-push-action@v2
         with:
