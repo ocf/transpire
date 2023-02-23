@@ -8,8 +8,6 @@ from typing import Any, Callable, List, TypeVar, Union
 from hera import Env, SecretVolume, Task, Volume, Workflow
 from pydantic import BaseModel, Field
 
-# `config` is imported as `config_`, to avoid shadowing issue with mypy
-from transpire.internal import config as config_
 from transpire.internal import context
 from transpire.manifestlike import manifests_to_dict
 
@@ -44,17 +42,10 @@ class Module:
     """Transpire modules contain information about how to build and deploy applications to Kubernetes."""
 
     pymodule: ModuleType
-    config: Union["config_.ModuleConfig", None]
 
-    def __init__(
-        self,
-        pymodule: ModuleType,
-        context=None,
-        config: Union["config_.ModuleConfig", None] = None,
-    ):
+    def __init__(self, pymodule: ModuleType, context=None):
         self.pymodule = pymodule
         self.glob_context = context
-        self.config = config
 
     @property
     def name(self) -> str:
@@ -109,75 +100,3 @@ class Module:
 
         # mypy bug causing something to be inferred as List[<nothing>]
         return self._render_fn("pipeline", finalizer=finalizer, default=[])  # type: ignore
-
-    def workflow(self) -> Workflow:
-        if self.config is None or not isinstance(self.config, config_.GitModuleConfig):
-            # this is kinda janky but idk how to resolve it
-            raise ValueError("Only git modules can run ci")
-
-        with Workflow(
-            f"{self.name}-ci",
-            generate_name=True,
-            service_account_name="transpire-ci-builder",
-        ) as w:
-            # TODO: Fix storage class default
-            volume = Volume(
-                size="25Gi", mount_path="/build", storage_class_name="rbd-nvme"
-            )
-
-            clone = Task(
-                "clone",
-                image="alpine/git:2.36.3",
-                args=[*self.config.clone_args(), "."],
-                volumes=[volume],
-                working_dir="/build/build",
-            )
-
-            build = [
-                Task(
-                    "build",
-                    image="moby/buildkit:v0.10.6-rootless",
-                    command=["buildctl-daemonless.sh"],
-                    env=[
-                        Env(
-                            name="BUILDKITD_FLAGS",
-                            value="--oci-worker-no-process-sandbox",
-                        ),
-                        Env(name="DOCKER_CONFIG", value="/docker"),
-                    ],
-                    args=[
-                        "build",
-                        "--frontend",
-                        "dockerfile.v0",
-                        "--local",
-                        f"context={image.resolved_path}",
-                        "--local",
-                        f"dockerfile={image.resolved_path}",
-                        "--output",
-                        # TODO: Get the git hash
-                        f"type=image,name=harbor.ocf.berkeley.edu/ocf/{self.name}/{image.name}:latest,push=true",
-                    ],
-                    volumes=[
-                        volume,
-                        SecretVolume(
-                            secret_name="harbor-credentials",
-                            mount_path="/docker",
-                            name="harbor-credentials",
-                        ),
-                    ],
-                    working_dir="/build/build",
-                )
-                for image in self.images
-            ]
-
-            # IMPORTANT: this type error is being ignored because this very specific
-            # case executes correctly. Since `clone` is a single task,
-            # `self.pipeline() >> clone` will also evaluate to a single task - either
-            # `self.pipeline()` is `list[Task]`, causing `Task.__rrshift__` to be
-            # invoked, which returns Task, OR `self.pipeline()` is `Task`, which
-            # invokes `Task.__rshift__`, which returns the RHS (`clone`), which is a
-            # `Task`. If `clone` ever becomes a list, this breaks (since there is no
-            # way for Hera to override `list >> list`).
-            self.pipeline() >> clone >> build  # type: ignore
-
-        return w

@@ -1,6 +1,6 @@
 import click
 
-from . import bootstrap, dev, obj, secrets
+from . import bootstrap, dev, obj, secrets, image
 
 
 @click.group()
@@ -11,4 +11,5 @@ def cli() -> None:
 cli.add_command(bootstrap.commands, "bootstrap")
 cli.add_command(dev.commands, "dev")
 cli.add_command(obj.commands, "object")
+cli.add_command(image.commands, "image")
 cli.add_command(secrets.commands, "secret")

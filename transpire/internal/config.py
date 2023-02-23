@@ -4,13 +4,13 @@ import os
 import re
 import shutil
 import subprocess
-import tomllib
 from abc import ABC, abstractmethod
 from functools import cache
 from pathlib import Path
 from types import ModuleType
 from typing import Literal, Optional
 
+import tomllib
 from pydantic import AnyUrl, BaseModel, Field, HttpUrl
 
 from transpire.internal.secrets import SecretsProvider
@@ -100,10 +100,10 @@ class ModuleConfig(ABC):
         ...
 
     def load_module(self, name: str | None) -> Module:
-        return Module(self.load_py_module(name), config=self)
+        return Module(self.load_py_module(name))
 
     def load_module_w_context(self, name: str | None, context):
-        return Module(self.load_py_module(name), context=context, config=self)
+        return Module(self.load_py_module(name), context=context)
 
 
 class LocalModuleConfig(ModuleConfig, BaseModel):
