@@ -1,11 +1,10 @@
-from collections.abc import Generator
+from collections.abc import Iterable
 from contextvars import Context
 from functools import cached_property
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, List, TypeVar, Union
+from typing import Any, Callable, List, TypeVar
 
-from hera import Env, SecretVolume, Task, Volume, Workflow
 from pydantic import BaseModel, Field
 
 from transpire.internal import context
@@ -75,8 +74,8 @@ class Module:
 
     def _render_iter(self, function: str) -> list[Any]:
         def finalizer(gen: Any) -> list[Any]:
-            if not isinstance(gen, Generator):
-                raise ValueError(f"function `{function}` must be a generator")
+            if not isinstance(gen, Iterable):
+                raise ValueError(f"function `{function}` must be iterable")
             return list(gen)
 
         return self._render_fn(function=function, finalizer=finalizer, default=[])
@@ -88,15 +87,3 @@ class Module:
     @cached_property
     def objects(self) -> List[dict]:
         return list(manifests_to_dict(self._render_iter("objects")))
-
-    def pipeline(self) -> List[Task] | Task:
-        def finalizer(val: Any) -> List[Task] | Task:
-            if isinstance(val, Task):
-                return val
-            if isinstance(val, list):
-                if all(isinstance(x, Task) for x in val):
-                    return val
-            raise ValueError("function `pipeline` must return Task or list[Task]")
-
-        # mypy bug causing something to be inferred as List[<nothing>]
-        return self._render_fn("pipeline", finalizer=finalizer, default=[])  # type: ignore
