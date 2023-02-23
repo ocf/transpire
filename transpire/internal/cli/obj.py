@@ -8,9 +8,7 @@ import yaml
 from loguru import logger
 
 from transpire.internal import render
-from transpire.internal.ci import resources as ci_resources
 from transpire.internal.config import ClusterConfig, get_config
-from transpire.types import Module
 
 
 @click.group()
@@ -42,10 +40,6 @@ def build(out_path, **_) -> None:
         rmtree(basedir)
     for module in modules:
         render.write_base(basedir, module)
-
-    logger.info("Writing CI")
-    render.write_ci(config, out_path)
-    render.write_base(basedir, Module(ci_resources))
 
 
 @commands.command("print")

@@ -6,7 +6,6 @@ import yaml
 from loguru import logger
 
 from transpire.internal import argocd
-from transpire.internal.ci import resources as ciresources
 from transpire.internal.config import ClusterConfig
 from transpire.internal.postprocessor import ManifestError, postprocess
 from transpire.types import Module
@@ -62,17 +61,3 @@ def write_base(basedir: Path, module: Module):
         raise ValueError("Argo Application has unset namespace.")
     with open(basedir / f"{module.name}_Application_{argo_namespace}.yaml", "w") as f:
         yaml.safe_dump(obj, f)
-
-
-def write_ci(config: ClusterConfig, manifest_dir: Path):
-    resources = ciresources.build(config.ci)
-    cidir = manifest_dir / "ci"
-    if cidir.exists():
-        rmtree(cidir)
-    cidir.mkdir(exist_ok=True)
-    for obj in resources:
-        name = obj["metadata"].get("name", obj["metadata"].get("generateName", None))
-        kind = obj["kind"]
-        namespace = obj["metadata"].get("namespace", name)
-        with open(cidir / f"{name}_{kind}_{namespace}.yaml", "w") as f:
-            yaml.safe_dump(obj, f)
