@@ -15,7 +15,7 @@ on:
 jobs:
   build-matrix:
     runs-on: ubuntu-latest
-    container: ghcr.io/ocf/transpire
+    container: harbor.ocf.berkeley.edu/transpire/transpire:main
     steps:
       - uses: actions/checkout@v3
         with:
