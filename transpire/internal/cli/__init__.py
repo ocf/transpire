@@ -1,6 +1,6 @@
 import click
 
-from . import bootstrap, dev, obj, secrets, image
+from . import bootstrap, dev, image, obj, secrets
 
 
 @click.group()
