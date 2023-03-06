@@ -2,7 +2,7 @@ import os
 
 import click
 
-from transpire.internal.config import ClusterConfig
+from transpire.internal.config import ClusterConfig, GitModuleConfig
 
 
 @click.group()
@@ -19,9 +19,24 @@ def build(module_name, output) -> None:
 
     if output == "gha":
         config = ClusterConfig.from_cwd()
-        module = config.modules[module_name].load_module(module_name)
+        module_config = config.modules[module_name]
 
-        images = [{"name": x.name, "path": str(x.resolved_path)} for x in module.images]
+        if not isinstance(module_config, GitModuleConfig):
+            click.echo("Building images is only supported for git modules", err=True)
+            return
+
+        module = module_config.load_module(module_name)
+
+        git_url = str(module_config.git)
+        if not git_url.endswith(".git"):
+            git_url += ".git"
+        if module_config.branch is not None:
+            git_url += f"#{module_config.branch}"
+
+        images = [
+            {"name": x.name, "context": f"{git_url}:{x.resolved_path}"}
+            for x in module.images
+        ]
 
         print(os.environ["GITHUB_OUTPUT"])
         print(f"image_matrix={images}")
