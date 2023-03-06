@@ -3,11 +3,11 @@ import importlib.util
 import os
 import re
 import shutil
-import subprocess
 import tomllib
 from abc import ABC, abstractmethod
 from functools import cache
 from pathlib import Path
+from subprocess import CalledProcessError, check_call
 from types import ModuleType
 from typing import Literal, Optional
 
@@ -141,48 +141,51 @@ class GitModuleConfig(ModuleConfig, BaseModel):
             return self.dir.relative_to("/")
         return self.dir
 
-    def clone_args(self) -> list[str]:
-        branch_args = [] if self.branch is None else ["--branch", self.branch]
-        return [
-            "clone",
-            "--depth",
-            "1",
-            "--single-branch",
-            *branch_args,
-            self.git,
-        ]
-
-    def get_cached_repo(self) -> Path:
+    def get_cached_repo(self, *, commit: str | None = None) -> Path:
         config = CLIConfig.from_env()
-        modules_cache_dir = config.cache_dir / "remote_modules"
-        cache_dir = modules_cache_dir / re.sub("[^A-Za-z0-9]", "_", self.git)
-        modules_cache_dir.mkdir(exist_ok=True, parents=True)
+        cache_root = config.cache_dir / "remote_modules"
+        cache_dir = cache_root / re.sub("[^A-Za-z0-9]", "_", self.git)
+        cache_root.mkdir(exist_ok=True, parents=True)
+
+        def call_cached_git(*args):
+            return check_call([config.git_path, *args], cwd=cache_dir)
+
+        if commit is None:
+            fetch_args = [self.branch or "HEAD", "--depth", "1"]
+            branch_args = [] if self.branch is None else ["--branch", self.branch]
+            clone_args = ["--depth", "1", "--single-branch", *branch_args]
+        else:
+            # FIXME lol --unshallow is not idempotent
+            fetch_args = ["--depth=10000000"]
+            clone_args = []
 
         if cache_dir.exists():
-            branch = self.branch or "HEAD"
             try:
-                subprocess.check_call(
-                    [config.git_path, "fetch", self.git, branch, "--depth", "1"],
-                    cwd=cache_dir,
-                )
-                subprocess.check_call(
-                    [config.git_path, "reset", "--hard", "FETCH_HEAD"],
-                    cwd=cache_dir,
-                )
-                subprocess.check_call([config.git_path, "clean", "-dfx"], cwd=cache_dir)
-            except subprocess.CalledProcessError:
+                call_cached_git("fetch", self.git, *fetch_args)
+                call_cached_git("checkout", "--detach")
+                call_cached_git("reset", "--hard", commit or "FETCH_HEAD")
+                call_cached_git("clean", "-dfx")
+            except CalledProcessError:
                 shutil.rmtree(cache_dir)
             else:
                 return cache_dir
 
         cache_dir.mkdir(exist_ok=True, parents=True)
-        subprocess.check_call(
-            [config.git_path, *self.clone_args(), cache_dir], cwd=modules_cache_dir
-        )
+        check_call([config.git_path, "clone", *clone_args, self.git, cache_dir])
+
+        call_cached_git("checkout", "--detach")
+        if commit is not None:
+            call_cached_git("reset", "--hard", commit)
+
         return cache_dir
 
-    def load_py_module(self, name: str | None) -> ModuleType:
-        cache_dir = self.get_cached_repo()
+    def load_module(self, name: str | None, *, commit: str | None = None) -> Module:
+        return Module(self.load_py_module(name, commit=commit))
+
+    def load_py_module(
+        self, name: str | None, *, commit: str | None = None
+    ) -> ModuleType:
+        cache_dir = self.get_cached_repo(commit=commit)
         return load_py_module_from_file(
             "_transpire", cache_dir / self.resolved_dir / ".transpire.py", name
         )
