@@ -53,9 +53,6 @@ jobs:
         uses: codecov/codecov-action@v3
 
   transpire-ci:
-    uses: ocf/transpire/.github/workflows/module-ci.yml@main
+    uses: oliver-ni/transpire-ci/.github/workflows/trigger.yml@main
     with:
       module-name: transpire
-    secrets:
-      HARBOR_USERNAME: ${{ secrets.HARBOR_USERNAME }}
-      HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
