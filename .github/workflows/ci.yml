@@ -53,6 +53,6 @@ jobs:
         uses: codecov/codecov-action@v3
 
   transpire-ci:
-    uses: oliver-ni/transpire-ci/.github/workflows/trigger.yml@main
+    uses: oliver-ni/transpire-ci/.github/workflows/trigger.yml@master
     with:
       module-name: transpire
