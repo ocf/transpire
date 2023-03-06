@@ -30,8 +30,9 @@ def build(module_name, output) -> None:
         git_url = str(module_config.git)
         if not git_url.endswith(".git"):
             git_url += ".git"
+        git_url += "#"
         if module_config.branch is not None:
-            git_url += f"#{module_config.branch}"
+            git_url += module_config.branch
 
         images = [
             {"name": x.name, "context": f"{git_url}:{x.resolved_path}"}
