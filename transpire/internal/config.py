@@ -99,9 +99,10 @@ class ModuleConfig(ABC):
     def load_module(self, name: str | None) -> Module:
         ...
 
-    def load_module_w_context(self, name: str | None, context):
+    def load_module_w_context(self, name: str | None, context) -> Module:
         module = self.load_module(name)
         module.glob_context = context
+        return module
 
 
 class LocalModuleConfig(ModuleConfig, BaseModel):
