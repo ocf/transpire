@@ -41,6 +41,7 @@ class Module:
     """Transpire modules contain information about how to build and deploy applications to Kubernetes."""
 
     pymodule: ModuleType
+    revision: str | None
 
     def __init__(self, pymodule: ModuleType, context=None):
         self.pymodule = pymodule

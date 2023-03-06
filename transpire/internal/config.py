@@ -7,7 +7,7 @@ import tomllib
 from abc import ABC, abstractmethod
 from functools import cache
 from pathlib import Path
-from subprocess import CalledProcessError, check_call
+from subprocess import CalledProcessError, check_output
 from types import ModuleType
 from typing import Literal, Optional
 
@@ -96,14 +96,12 @@ def load_py_module_from_file(
 
 class ModuleConfig(ABC):
     @abstractmethod
-    def load_py_module(self, name: str | None) -> ModuleType:
+    def load_module(self, name: str | None) -> Module:
         ...
 
-    def load_module(self, name: str | None) -> Module:
-        return Module(self.load_py_module(name))
-
     def load_module_w_context(self, name: str | None, context):
-        return Module(self.load_py_module(name), context=context)
+        module = self.load_module(name)
+        module.glob_context = context
 
 
 class LocalModuleConfig(ModuleConfig, BaseModel):
@@ -111,13 +109,15 @@ class LocalModuleConfig(ModuleConfig, BaseModel):
         description="The path to the transpire config file within the module"
     )
 
-    def load_py_module(self, name: str | None) -> ModuleType:
+    def load_module(self, name: str | None) -> Module:
         # TODO: do something about the implicit assumption that cwd == root of cluster repo
         # TODO: handle escaping file stem, make ".transpire.py" sane
-        return load_py_module_from_file(
-            re.sub("[^A-Za-z0-9_]", "_", self.path.stem),
-            self.path,
-            name,
+        return Module(
+            load_py_module_from_file(
+                re.sub("[^A-Za-z0-9_]", "_", self.path.stem),
+                self.path,
+                name,
+            )
         )
 
     @classmethod
@@ -141,14 +141,18 @@ class GitModuleConfig(ModuleConfig, BaseModel):
             return self.dir.relative_to("/")
         return self.dir
 
-    def get_cached_repo(self, *, commit: str | None = None) -> Path:
+    @property
+    def clean_git_url(self):
+        return self.git.removesuffix(".git") + ".git"
+
+    def get_cached_repo(self, *, commit: str | None = None) -> tuple[Path, str]:
         config = CLIConfig.from_env()
         cache_root = config.cache_dir / "remote_modules"
         cache_dir = cache_root / re.sub("[^A-Za-z0-9]", "_", self.git)
         cache_root.mkdir(exist_ok=True, parents=True)
 
         def call_cached_git(*args):
-            return check_call([config.git_path, *args], cwd=cache_dir)
+            return check_output([config.git_path, *args], cwd=cache_dir)
 
         if commit is None:
             fetch_args = [self.branch or "HEAD", "--depth", "1"]
@@ -168,27 +172,27 @@ class GitModuleConfig(ModuleConfig, BaseModel):
             except CalledProcessError:
                 shutil.rmtree(cache_dir)
             else:
-                return cache_dir
+                return cache_dir, call_cached_git("rev-parse", "HEAD").decode().strip()
 
         cache_dir.mkdir(exist_ok=True, parents=True)
-        check_call([config.git_path, "clone", *clone_args, self.git, cache_dir])
+        check_output([config.git_path, "clone", *clone_args, self.git, cache_dir])
 
         call_cached_git("checkout", "--detach")
-        if commit is not None:
+        if commit is None:
+            commit = call_cached_git("rev-parse", "HEAD").decode().strip()
+        else:
             call_cached_git("reset", "--hard", commit)
 
-        return cache_dir
+        return cache_dir, commit
 
     def load_module(self, name: str | None, *, commit: str | None = None) -> Module:
-        return Module(self.load_py_module(name, commit=commit))
-
-    def load_py_module(
-        self, name: str | None, *, commit: str | None = None
-    ) -> ModuleType:
-        cache_dir = self.get_cached_repo(commit=commit)
-        return load_py_module_from_file(
+        cache_dir, commit = self.get_cached_repo(commit=commit)
+        py_module = load_py_module_from_file(
             "_transpire", cache_dir / self.resolved_dir / ".transpire.py", name
         )
+        module = Module(py_module)
+        module.revision = commit
+        return module
 
 
 class CIConfig(BaseModel):
