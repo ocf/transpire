@@ -3,7 +3,7 @@ name: Transpire Module CI
 on:
   workflow_call:
     inputs:
-      module-name:
+      module_name:
         required: true
         type: string
     secrets:
@@ -21,7 +21,7 @@ jobs:
         with:
           repository: ocf/kubernetes
       - id: set-matrix
-        run: transpire image build ${{ inputs.module-name }} -o gha
+        run: transpire image build ${{ inputs.module_name }} -o gha
     outputs:
       image_matrix: ${{ steps.set-matrix.outputs.image_matrix }}
 
