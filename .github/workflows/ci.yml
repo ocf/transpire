@@ -58,6 +58,6 @@ jobs:
   transpire-ci:
     uses: ocf/transpire-ci/.github/workflows/trigger.yml@master
     with:
-      module-name: transpire
+      module_name: transpire
     secrets:
       TRANSPIRE_CI_PAT: ${{ secrets.TRANSPIRE_CI_PAT }}
