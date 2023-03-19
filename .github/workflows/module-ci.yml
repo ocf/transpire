@@ -11,6 +11,8 @@ on:
         required: true
       HARBOR_PASSWORD:
         required: true
+      OCF_CLUSTER_DEPLOY_KEY:
+        required: true
 
 jobs:
   build-matrix:
@@ -48,3 +50,30 @@ jobs:
           labels: ${{ join(matrix.image.labels) }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  build-cluster:
+    needs: build-images
+    runs-on: ubuntu-latest
+    container: harbor.ocf.berkeley.edu/ocf/transpire/transpire:main
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: ocf/kubernetes
+      - run: transpire object build _out/
+      - run: |
+          echo "${{ secrets.OCF_CLUSTER_DEPLOY_KEY }}" > $HOME/.ssh/deploy_key
+          chmod 600 $HOME/.ssh/deploy_key
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/deploy_key"
+
+          CLONE_DIR=$(mktemp -d)
+          git clone --bare --single-branch --depth 1 git@github.com:ocf/cluster.git $CLONE_DIR
+          mv $CLONE_DIR _out/.git
+
+          cd _out
+          git config --bool core.bare false
+          git config user.email ocfbot@ocf.berkeley.edu
+          git config user.name ocfbot
+
+          git add -A
+          git commit -m "chore: rebuild cluster repository" -m "triggered by: ${{ inputs.module_name }}"
+          git push
