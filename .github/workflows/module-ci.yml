@@ -77,6 +77,7 @@ jobs:
 
           cd _out
           git config --bool core.bare false
+          git config --bool push.autoSetupRemote true
           git config user.email ocfbot@ocf.berkeley.edu
           git config user.name ocfbot
 
