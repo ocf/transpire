@@ -68,6 +68,7 @@ jobs:
           mkdir $HOME/.ssh
           echo "${{ secrets.OCF_CLUSTER_DEPLOY_KEY }}" > $HOME/.ssh/deploy_key
           chmod 600 $HOME/.ssh/deploy_key
+          ssh-keyscan -H github.com > $HOME/.ssh/known_hosts
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/deploy_key"
 
           CLONE_DIR=$(mktemp -d)
