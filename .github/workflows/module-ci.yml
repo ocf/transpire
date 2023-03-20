@@ -17,7 +17,7 @@ on:
 jobs:
   build-matrix:
     runs-on: ubuntu-latest
-    container: harbor.ocf.berkeley.edu/ocf/transpire/transpire:main
+    container: harbor.ocf.berkeley.edu/ocf/transpire/transpire:latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -54,12 +54,14 @@ jobs:
   build-cluster:
     needs: build-images
     runs-on: ubuntu-latest
-    container: harbor.ocf.berkeley.edu/ocf/transpire/transpire:main
+    container: harbor.ocf.berkeley.edu/ocf/transpire/transpire:latest
     steps:
       - uses: actions/checkout@v3
         with:
           repository: ocf/kubernetes
+
       - run: transpire object build _out/
+
       - run: |
           echo "${{ secrets.OCF_CLUSTER_DEPLOY_KEY }}" > $HOME/.ssh/deploy_key
           chmod 600 $HOME/.ssh/deploy_key
