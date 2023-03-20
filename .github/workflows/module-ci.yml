@@ -60,9 +60,12 @@ jobs:
         with:
           repository: ocf/kubernetes
 
-      - run: transpire object build _out/
+      - name: Build cluster repository
+        run: transpire object build _out
 
-      - run: |
+      - name: Push cluster repository
+        run: |
+          mkdir $HOME/.ssh
           echo "${{ secrets.OCF_CLUSTER_DEPLOY_KEY }}" > $HOME/.ssh/deploy_key
           chmod 600 $HOME/.ssh/deploy_key
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/deploy_key"
