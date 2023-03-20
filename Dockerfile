@@ -1,6 +1,6 @@
 FROM python:3.11-alpine AS transpire
 
-RUN apk add git
+RUN apk add git openssh-client
 RUN apk add kubectl --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/
 RUN apk add helm --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
 
