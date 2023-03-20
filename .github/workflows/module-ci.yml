@@ -69,7 +69,7 @@ jobs:
           echo "${{ secrets.OCF_CLUSTER_DEPLOY_KEY }}" > $HOME/.ssh/deploy_key
           chmod 600 $HOME/.ssh/deploy_key
           ssh-keyscan -H github.com > $HOME/.ssh/known_hosts
-          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/deploy_key"
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/deploy_key -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
 
           CLONE_DIR=$(mktemp -d)
           git clone --bare --single-branch --depth 1 git@github.com:ocf/cluster.git $CLONE_DIR
