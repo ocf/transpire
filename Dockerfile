@@ -1,15 +1,13 @@
-FROM python:3.11-slim AS transpire
+FROM python:3.11-alpine AS transpire
 
-LABEL org.opencontainers.image.source https://github.com/ocf/transpire
-
-WORKDIR /app
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add git
+RUN apk add kubectl --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/
+RUN apk add helm --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
 
 RUN pip install poetry
 RUN poetry config virtualenvs.create false
 
+WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-dev
 
