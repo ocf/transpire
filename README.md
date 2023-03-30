@@ -1,21 +1,27 @@
 # transpire
 
-An opinionated way to do Kubernetes Git-Ops.
+Transpire (/tɹænˈspaɪ̯ɚ/) is a Kubernetes config generation tool designed by and for the Open Computing Facility. If you’re wondering why we wanted to build our own thing, check out the History document.
 
-- Generate all Kubernetes objects from Python, not YAML.
-- Use separate repositories to store your Python configuration.
-  - One [main repository](https://ocf.io/gh/kubernetes) with core cluster infrastructure (CoreDNS, Cilium, ArgoCD, etc...)
-  - Many separate app repositories with Dockerfiles ([ocf/templates](https://ocf.io/gh/templates), [ocf/jukebox](https://ocf.io/gh/jukebox), etc...)
-- One [cluster repository](https://ocf.io/gh/cluster) to store generated Kubernetes configuration (for rollbacks + inspection).
+## Design Goals
 
-## How does it work?
+Here’s what we wanted out of transpire...
 
-- Create a "cluster repository" (can be a branch) for every Kubernetes cluster you want to run. This repository will contain every object you want to deploy, rendered as YAML. It will be automatically maintained by CI -- you will only push to it in exceptional circumstances.
-- Create one or more "app repositories" (can be branches) for every app you want to deploy.
-  - We recommend using one app repository for core infrastructure (DNS, CNI, ArgoCD, Ingress, Storage, etc.), and separate repositories for apps that you want to run on Kubernetes.
-  - In the root of each repository, include a `.transpire.py` file that does `import transpire` and generates your desired Kubernetes objects as Python dicts. The transpire library has helper functions for some common objects. Otherwise, you may want to `import kubernetes` for more help. Pass objects to `transpire.emit()` to return them.
-  - In the root of each repository, include a `.transpire.toml` file that contains information about what containers to build. Built artifacts will be available to `.transpire.py` via `transpire.artifacts`.
-  - To develop, run `transpire dev`. This will generate a `.transpire/objects/` folder with generated configuration and dummy container names.
-- Use `transpire bootstrap kubernetes` to bootstrap a Kubernetes cluster you've deployed.
-  - Uses local `kubectl` credentials to install dependencies (ArgoCD, Cilium, CoreDNS).
-  - Points ArgoCD at your cluster repository + automatically runs the first sync.
+- All non-secret configurations and values should live transparently in Git.
+  - This includes Kubernetes resources, and configuration for our own apps.
+  - People before us at the OCF opted to throw the entire configuration file into a secret store if it contained any secret values, which is a little annoying if you don’t have access to secrets, and also bad for security because it means more people need access to secrets.
+- Secrets are stored securely
+  - Can create Kubernetes secrets, and template secrets into application configuration
+  - Can automatically generate certain types of secrets (CA Certs, random strings)
+- Minimize YAML
+  - We don’t like writing YAML very much.
+  - Writing YAML tends to result in config being copied around from one project to the next - warts and (now-unnecessary) workarounds included - which makes it hard to change things across the whole organization at once
+    - e.g. what to do when you want to change how secrets are injected, and every single project has copy-pasted (sometimes with modifications!) the old method into its own YAML file?
+- Support Helm charts
+  - We should be able to get any helm chart from a repository
+  - We should be able to arbitrarily modify any Helm chart
+- Support any other reasonable method of distributing Kubernetes manifests
+  - Also known as “HTTP(s) URLs and checksums”
+
+## Usage
+
+Transpire is still rapidly changing and is not (quite) ready for others to use. You will need to read source code.
