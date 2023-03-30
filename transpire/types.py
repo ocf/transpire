@@ -49,7 +49,9 @@ class Module:
 
     @property
     def name(self) -> str:
-        return self.pymodule.name
+        name = self.pymodule.name
+        assert name != "base"
+        return name
 
     @cached_property
     def namespace(self) -> str:

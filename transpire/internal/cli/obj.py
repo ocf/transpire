@@ -34,7 +34,6 @@ def build(out_path, **_) -> None:
         logger.info(f"Building {module.name}")
         render.write_manifests(config, module.objects, module.name, out_path)
 
-    # TODO: Disallow calling a transpire module "base", via Pydantic.
     logger.info("Writing bases")
     basedir = Path(out_path) / "base"
     if basedir.exists():
