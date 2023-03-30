@@ -1,3 +1,4 @@
+import subprocess
 import sys
 from pathlib import Path
 from shutil import rmtree
@@ -52,6 +53,17 @@ def list_manifests(app_name: Optional[str] = None, **_) -> None:
 
 @commands.command()
 @click.argument("app_name", required=True)
-def apply(app_name: str, **_):
+def apply(app_name: str, **_) -> None:
     """build objects, apply them to current kubernetes context"""
-    return NotImplemented
+    # TODO: We should probably use the Kubernetes API here instead of shelling out.
+    # That said, we do want this to behave exactly like kubectl apply, and what better
+    # way to do that than to actually use kubectl apply? So maybe we don't want that.
+    module = get_config(app_name)
+    subprocess.run(
+        ["kubectl", "create", "ns", module.namespace],
+        check=False,
+    )
+    subprocess.run(
+        ["kubectl", "apply", "-n", module.namespace, "-f", "-"],
+        input=yaml.safe_dump_all(module.objects).encode("utf_8"),
+    )
