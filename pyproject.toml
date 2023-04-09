@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "transpire"
-version = "0.1.0"
+version = "0.2.0"
 description = "the OCF Kubernetes helper library"
 authors = ["Nikhil Jha <njha@ocf.berkeley.edu>"]
 license = "Apache-2.0"
