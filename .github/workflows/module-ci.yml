@@ -52,6 +52,6 @@ jobs:
           cache-to: type=gha,mode=max
 
   build-cluster:
-    uses: ocf/transpire/.github/workflows/cluster-ci.yml@master
+    uses: ocf/transpire/.github/workflows/cluster-ci.yml@main
     secrets:
       OCF_CLUSTER_DEPLOY_KEY: ${{ secrets.OCF_CLUSTER_DEPLOY_KEY }}
