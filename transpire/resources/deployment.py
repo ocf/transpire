@@ -6,6 +6,8 @@ from transpire.resources.base import Resource
 
 
 class Deployment(Resource[client.V1Deployment]):
+    SELECTOR_LABEL = "transpire.ocf.io/deployment"
+
     def __init__(
         self,
         name: str,
@@ -19,12 +21,10 @@ class Deployment(Resource[client.V1Deployment]):
             spec=client.V1DeploymentSpec(
                 replicas=1,
                 selector=client.V1LabelSelector(
-                    match_labels={"transpire.ocf.io/deployment": name}
+                    match_labels={self.SELECTOR_LABEL: name}
                 ),
                 template=client.V1PodTemplateSpec(
-                    metadata=client.V1ObjectMeta(
-                        labels={"transpire.ocf.io/deployment": name}
-                    ),
+                    metadata=client.V1ObjectMeta(labels={self.SELECTOR_LABEL: name}),
                     spec=client.V1PodSpec(
                         containers=[
                             client.V1Container(
