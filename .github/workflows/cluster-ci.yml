@@ -8,7 +8,6 @@ on:
 
 jobs:
   build-cluster:
-    needs: build-images
     runs-on: ubuntu-latest
     container: harbor.ocf.berkeley.edu/ocf/transpire/transpire:latest
     steps:
