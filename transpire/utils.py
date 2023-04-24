@@ -2,6 +2,14 @@ import pathlib
 import tomllib
 from typing import Dict, cast
 
+from transpire.internal.context import get_app_context
+from transpire.types import Image
+
+
+def get_images() -> Dict[str, Image]:
+    """Retrieves the current Transpire module's images."""
+    return {im.name: im for im in get_app_context().images}
+
 
 def get_file(caller, filename: str) -> pathlib.Path:
     """
