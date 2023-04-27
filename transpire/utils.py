@@ -11,6 +11,16 @@ def get_images() -> Dict[str, Image]:
     return {im.name: im for im in get_app_context().images}
 
 
+def get_image_tag(name: str) -> str:
+    """Retrieves the current Transpire module's images."""
+    module = get_app_context()
+    for im in module.images:
+        if im.name != name:
+            continue
+        return f"harbor.ocf.berkeley.edu/ocf/{module.name}/{im.name}:{module.revision}"
+    raise ValueError(f"no image with name {name}")
+
+
 def get_file(caller, filename: str) -> pathlib.Path:
     """
     Given the __file__ parameter of the calling file and
