@@ -134,3 +134,6 @@ class Deployment(Resource[client.V1Deployment]):
 
         container_list.append(container)
         return len(container_list) - 1
+
+    def get_selector(self) -> dict[str, str]:
+        return {self.SELECTOR_LABEL: self.obj.metadata.name}
