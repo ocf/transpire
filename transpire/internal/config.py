@@ -11,7 +11,7 @@ from subprocess import CalledProcessError, check_output
 from types import ModuleType
 from typing import Literal, Optional
 
-from pydantic import AnyUrl, BaseModel, Field, HttpUrl
+from pydantic import AnyUrl, BaseModel, Field
 
 from transpire.internal.secrets import SecretsProvider
 from transpire.internal.secrets.vault import HashicorpVaultConfig, VaultSecret
@@ -196,13 +196,6 @@ class GitModuleConfig(ModuleConfig, BaseModel):
         return module
 
 
-class CIConfig(BaseModel):
-    """CI Configuration"""
-
-    namespace: str = Field(description="kubernetes namespace", default="transpire")
-    webhook_url: HttpUrl = Field(description="github webhook url")
-
-
 class ClusterDefaults(BaseModel):
     ingressClass: str | None
     certManagerIssuer: str | None
@@ -223,8 +216,6 @@ class ClusterConfig(BaseModel):
         str,
         LocalModuleConfig | GitModuleConfig,
     ] = Field(description="list of modules to load")
-
-    ci: CIConfig
     defaults: ClusterDefaults
 
     @classmethod
