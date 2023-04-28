@@ -53,6 +53,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   build-cluster:
+    if: always()
     needs: build-images
     uses: ocf/transpire/.github/workflows/cluster-ci.yml@main
     secrets:
