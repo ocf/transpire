@@ -30,7 +30,7 @@ jobs:
   build-images:
     needs: build-matrix
     runs-on: ubuntu-latest
-    if: fromJson(needs.build-matrix.outputs.image_matrix).length > 0
+    if: fromJson(needs.build-matrix.outputs.image_matrix)[0] != null
     strategy:
       matrix:
         image: ${{ fromJson(needs.build-matrix.outputs.image_matrix) }}
