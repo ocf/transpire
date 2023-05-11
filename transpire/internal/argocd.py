@@ -4,11 +4,17 @@ from transpire.internal.validation import is_valid_dnsname
 def make_app(
     app_name: str,
     app_namespace: str,
+    *,
+    auto_sync: bool,
     repo_url: str = "https://github.com/ocf/cluster.git",
     repo_branch: str = "HEAD",
 ) -> dict:
     if not is_valid_dnsname(app_name):
         raise ValueError(f"Expected a valid DNS name, but got {app_name} instead.")
+
+    sync_policy: dict = {"syncOptions": ["CreateNamespace=true"]}
+    if auto_sync:
+        sync_policy["automated"] = {"selfHeal": True}
 
     return {
         "apiVersion": "argoproj.io/v1alpha1",
@@ -25,10 +31,6 @@ def make_app(
                 "path": f"{app_name}",
                 "targetRevision": repo_branch,
             },
-            "syncPolicy": {
-                "syncOptions": [
-                    "CreateNamespace=true",
-                ],
-            },
+            "syncPolicy": sync_policy,
         },
     }

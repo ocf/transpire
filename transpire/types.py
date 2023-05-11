@@ -53,6 +53,12 @@ class Module:
         assert name != "base"
         return name
 
+    @property
+    def auto_sync(self) -> bool:
+        if hasattr(self.pymodule, "auto_sync"):
+            return self.pymodule.auto_sync
+        return False
+
     @cached_property
     def namespace(self) -> str:
         if hasattr(self.pymodule, "namespace"):

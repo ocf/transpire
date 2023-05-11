@@ -55,7 +55,7 @@ def write_manifests(
 
 def write_base(basedir: Path, module: Module):
     basedir.mkdir(exist_ok=True)
-    obj = argocd.make_app(module.name, module.namespace)
+    obj = argocd.make_app(module.name, module.namespace, auto_sync=module.auto_sync)
     argo_namespace = obj["metadata"].get("namespace")
     if not argo_namespace:
         raise ValueError("Argo Application has unset namespace.")
