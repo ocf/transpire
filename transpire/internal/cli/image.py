@@ -56,6 +56,7 @@ def build(module_name: str, output: str, commit: str | None) -> None:
             {
                 "name": x.name,
                 "context": f"{git_url}:{x.resolved_path}",
+                **({"target": x.target} if x.target is not None else {}),
                 **image_metadata(module_config, module, x),
             }
             for x in module.images
