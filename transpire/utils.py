@@ -6,6 +6,11 @@ from transpire.internal.context import get_app_context
 from transpire.types import Image
 
 
+def get_revision() -> str | None:
+    """Retrieves the current Transpire module's revision."""
+    return get_app_context().revision
+
+
 def get_images() -> Dict[str, Image]:
     """Retrieves the current Transpire module's images."""
     return {im.name: im for im in get_app_context().images}
