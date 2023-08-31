@@ -1,8 +1,13 @@
-FROM python:3.11-alpine AS transpire
+FROM python:3.11-slim AS transpire
 
-RUN apk add git openssh-client
-RUN apk add kubectl --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
-RUN apk add helm --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    openssh-client \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+RUN curl -L "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl \
+    && chmod +x /usr/local/bin/kubectl
+RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 RUN pip install poetry
 RUN poetry config virtualenvs.create false
