@@ -14,7 +14,7 @@ def make_app(
 
     sync_policy: dict = {"syncOptions": ["CreateNamespace=true"]}
     if auto_sync:
-        sync_policy["automated"] = {"selfHeal": True}
+        sync_policy["automated"] = {}
 
     return {
         "apiVersion": "argoproj.io/v1alpha1",
