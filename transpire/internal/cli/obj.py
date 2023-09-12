@@ -20,12 +20,18 @@ def commands(**_) -> None:
 
 @commands.command()
 @click.argument("out_path", envvar="TRANSPIRE_OBJECT_OUTPUT", type=click.Path())
-def build(out_path, **_) -> None:
+@click.option("--module")
+def build(out_path, module, **_) -> None:
     """build objects, write them to a folder"""
     config = ClusterConfig.from_cwd()
-    modules = [
-        c.load_module_w_context(n, context=config) for n, c in config.modules.items()
-    ]
+
+    if module is None:
+        modules = [
+            c.load_module_w_context(n, context=config)
+            for n, c in config.modules.items()
+        ]
+    else:
+        modules = [config.modules[module].load_module_w_context(module, context=config)]
 
     out_path = Path(out_path)
     out_path.mkdir(exist_ok=True, parents=True)
@@ -36,7 +42,7 @@ def build(out_path, **_) -> None:
 
     logger.info("Writing bases")
     basedir = Path(out_path) / "base"
-    if basedir.exists():
+    if basedir.exists() and module is not None:
         rmtree(basedir)
     for module in modules:
         render.write_base(basedir, module)
