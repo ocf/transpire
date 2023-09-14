@@ -2,9 +2,10 @@ import click
 from kubernetes import client, config
 
 from transpire.internal.config import get_config, provider_from_context
+from transpire.internal.cli.utils import AliasedGroup
 
 
-@click.group()
+@click.command(cls=AliasedGroup)
 def commands(**_):
     """secret management commands"""
     pass

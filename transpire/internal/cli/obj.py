@@ -10,9 +10,10 @@ from loguru import logger
 
 from transpire.internal import render
 from transpire.internal.config import ClusterConfig, get_config
+from transpire.internal.cli.utils import AliasedGroup
 
 
-@click.group()
+@click.command(cls=AliasedGroup)
 def commands(**_) -> None:
     """tools related to Kubernetes objects"""
     pass

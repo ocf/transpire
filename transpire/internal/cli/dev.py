@@ -1,9 +1,10 @@
 import click
 
 from transpire.internal import config
+from transpire.internal.cli.utils import AliasedGroup
 
 
-@click.group()
+@click.command(cls=AliasedGroup)
 def commands(**_):
     """tools to aid development with transpire"""
     pass

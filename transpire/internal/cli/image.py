@@ -5,6 +5,7 @@ import click
 
 from transpire.internal.config import ClusterConfig, GitModuleConfig
 from transpire.types import Image, Module
+from transpire.internal.cli.utils import AliasedGroup
 
 REGISTRY = "harbor.ocf.berkeley.edu"
 
@@ -25,7 +26,7 @@ def image_metadata(config: GitModuleConfig, module: Module, image: Image):
     }
 
 
-@click.group()
+@click.command(cls=AliasedGroup)
 def commands(**_) -> None:
     """tools related to images"""
     pass
