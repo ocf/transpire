@@ -58,7 +58,7 @@ class Module:
     def auto_sync(self) -> bool:
         if hasattr(self.pymodule, "auto_sync"):
             return self.pymodule.auto_sync
-        return False
+        return True
 
     @cached_property
     def namespace(self) -> str:
