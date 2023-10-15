@@ -13,6 +13,8 @@ class Deployment(Resource[client.V1Deployment]):
         name: str,
         image: str,
         ports: List[Union[str, int]],
+        *,
+        args: List[str] | None = None,
     ):
         self.obj = client.V1Deployment(
             api_version="apps/v1",
@@ -31,6 +33,7 @@ class Deployment(Resource[client.V1Deployment]):
                                 name="main",
                                 image=image,
                                 image_pull_policy="IfNotPresent",
+                                args=args,
                                 ports=[
                                     client.V1ContainerPort(container_port=x)
                                     for x in ports
