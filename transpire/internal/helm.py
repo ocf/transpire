@@ -60,6 +60,13 @@ def update_repo(name: str) -> None:
     exec_helm(["repo", "update", name], check=False)
 
 
+def search_repo(query: str) -> list[dict]:
+    """search a repository for a chart"""
+
+    assert_helm()
+    stdout, _ = exec_helm(["search", "repo", query, "--output", "yaml"], check=True)
+    return yaml.safe_load(stdout)
+
 def build_chart(
     repo_url: str,
     chart_name: str,

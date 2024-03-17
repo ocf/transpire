@@ -17,6 +17,7 @@ loguru = "^0.7.2"
 pydantic = "^1.9.0"
 hvac = "^1.0.2"
 requests = "^2.28.2"
+tomlkit = "^0.12.4"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.2.0"

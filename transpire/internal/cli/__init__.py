@@ -1,6 +1,6 @@
 import click
 
-from . import bootstrap, dev, image, obj, secrets, utils
+from . import bootstrap, dev, image, obj, secrets, utils, versions
 
 @click.command(cls=utils.AliasedGroup)
 def cli() -> None:
@@ -12,3 +12,4 @@ cli.add_command(dev.commands, "dev")
 cli.add_command(obj.commands, "object")
 cli.add_command(image.commands, "image")
 cli.add_command(secrets.commands, "secret")
+cli.add_command(versions.commands, "versions")
