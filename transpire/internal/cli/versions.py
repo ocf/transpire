@@ -1,16 +1,17 @@
 import click
 import tomlkit
-
-from transpire.internal.cli.utils import AliasedGroup
-from transpire.internal import helm
 from loguru import logger
 
+from transpire.internal import helm
+from transpire.internal.cli.utils import AliasedGroup
 from transpire.internal.config import ClusterConfig
+
 
 @click.command(cls=AliasedGroup)
 def commands(**_):
     """version management commands"""
     pass
+
 
 def get_latest_version(doc, app_name: str):
     if "helm" in doc[app_name]:
@@ -28,6 +29,7 @@ def get_latest_version(doc, app_name: str):
         return latest_version
     return None
 
+
 @commands.command()
 @click.option("-f", "--file")
 @click.argument("app_name", required=True)
@@ -36,11 +38,14 @@ def update(app_name: str, file: str, **_) -> None:
     doc = tomlkit.parse(open(file).read())
     latest_version = get_latest_version(doc, app_name)
 
-    if latest_version != None and latest_version != doc[app_name]["version"]:
-        logger.info(f"updating {app_name} from {doc[app_name]['version']} to {latest_version}")
+    if latest_version is not None and latest_version != doc[app_name]["version"]:
+        logger.info(
+            f"updating {app_name} from {doc[app_name]['version']} to {latest_version}"
+        )
         doc[app_name]["version"] = latest_version
         with open(file, "w") as f:
             f.write(tomlkit.dumps(doc))
+
 
 @commands.command()
 @click.argument("file", required=True)
@@ -55,4 +60,6 @@ def all_updates(file: str, **_) -> None:
         latest_version = get_latest_version(doc, name)
 
         if latest_version != doc[name]["version"]:
-            logger.info(f"{name} can be updated from {doc[name]['version']} to {latest_version}")
+            logger.info(
+                f"{name} can be updated from {doc[name]['version']} to {latest_version}"
+            )

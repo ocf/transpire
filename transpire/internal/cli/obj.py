@@ -9,8 +9,8 @@ import yaml
 from loguru import logger
 
 from transpire.internal import render
-from transpire.internal.config import ClusterConfig, get_config
 from transpire.internal.cli.utils import AliasedGroup
+from transpire.internal.config import ClusterConfig, get_config
 
 
 @click.command(cls=AliasedGroup)

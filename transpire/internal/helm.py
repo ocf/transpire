@@ -67,6 +67,7 @@ def search_repo(query: str) -> list[dict]:
     stdout, _ = exec_helm(["search", "repo", query, "--output", "yaml"], check=True)
     return yaml.safe_load(stdout)
 
+
 def build_chart(
     repo_url: str,
     chart_name: str,

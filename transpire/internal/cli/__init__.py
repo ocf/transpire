@@ -2,6 +2,7 @@ import click
 
 from . import bootstrap, dev, image, obj, secrets, utils, versions
 
+
 @click.command(cls=utils.AliasedGroup)
 def cli() -> None:
     pass

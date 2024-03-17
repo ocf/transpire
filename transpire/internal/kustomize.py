@@ -5,9 +5,6 @@ from typing import Any
 
 import yaml
 
-from transpire.internal.config import CLIConfig
-from transpire.internal.context import get_app_context
-
 __all__ = ["build_kustomization_from_versions", "build_kustomization"]
 
 
@@ -20,8 +17,6 @@ def assert_kubectl() -> None:
 
 def exec_kustomize(args: list[str], check: bool = True) -> tuple[bytes, bytes]:
     """executes a kustomize command and returns (stdout, stderr)"""
-
-    config = CLIConfig.from_env()
     process = run(
         [
             "kubectl",
@@ -47,7 +42,9 @@ def build_kustomization(
     """build a kustomization and return a list of manifests"""
 
     kustomize_url = urllib.parse.urljoin(repo_url, path)
-    full_url = urllib.parse.urlparse(f"{kustomize_url}")._replace(query=f"ref={version}")
+    full_url = urllib.parse.urlparse(f"{kustomize_url}")._replace(
+        query=f"ref={version}"
+    )
 
     # TODO: Capture `stderr` output and make available to tracing.
     stdout, _ = exec_kustomize(

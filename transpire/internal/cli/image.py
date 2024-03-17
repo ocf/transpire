@@ -3,9 +3,9 @@ from datetime import datetime, timezone
 
 import click
 
+from transpire.internal.cli.utils import AliasedGroup
 from transpire.internal.config import ClusterConfig, GitModuleConfig
 from transpire.types import Image, Module
-from transpire.internal.cli.utils import AliasedGroup
 
 REGISTRY = "harbor.ocf.berkeley.edu"
 

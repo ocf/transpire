@@ -1,8 +1,8 @@
 import click
 from kubernetes import client, config
 
-from transpire.internal.config import get_config, provider_from_context
 from transpire.internal.cli.utils import AliasedGroup
+from transpire.internal.config import get_config, provider_from_context
 
 
 @click.command(cls=AliasedGroup)
