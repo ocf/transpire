@@ -2,9 +2,6 @@ name: Transpire Module CI
 
 on:
   workflow_call:
-    inputs:
-      module_name:
-        type: string
     secrets:
       OCF_CLUSTER_DEPLOY_KEY:
         required: true
@@ -19,7 +16,7 @@ jobs:
           repository: ocf/kubernetes
 
       - name: Build cluster repository
-        run: transpire object build _out ${{ inputs.module_name != '' && format('--module {0}', inputs.module_name) || '' }}
+        run: transpire object build _out
 
       - name: Push cluster repository
         run: |
