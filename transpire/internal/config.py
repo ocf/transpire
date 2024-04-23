@@ -131,7 +131,7 @@ class GitModuleConfig(ModuleConfig, BaseModel):
     git: AnyUrl = Field(
         description="The URL of the remote git repository the module resides in"
     )
-    branch: str | None = Field(description="The branch to deploy from")
+    branch: str | None = Field(description="The branch to deploy from", default=None)
     dir: Path = Field(
         description="The root path containing the module", default=Path(".")
     )
@@ -149,7 +149,7 @@ class GitModuleConfig(ModuleConfig, BaseModel):
     def get_cached_repo(self, *, commit: str | None = None) -> tuple[Path, str]:
         config = CLIConfig.from_env()
         cache_root = config.cache_dir / "remote_modules"
-        cache_dir = cache_root / re.sub("[^A-Za-z0-9]", "_", self.git)
+        cache_dir = cache_root / re.sub("[^A-Za-z0-9]", "_", str(self.git))
         cache_root.mkdir(exist_ok=True, parents=True)
 
         def call_cached_git(*args):
@@ -166,7 +166,7 @@ class GitModuleConfig(ModuleConfig, BaseModel):
 
         if cache_dir.exists():
             try:
-                call_cached_git("fetch", self.git, *fetch_args)
+                call_cached_git("fetch", str(self.git), *fetch_args)
                 call_cached_git("checkout", "--detach")
                 call_cached_git("reset", "--hard", commit or "FETCH_HEAD")
                 call_cached_git("clean", "-dfx")
@@ -176,7 +176,7 @@ class GitModuleConfig(ModuleConfig, BaseModel):
                 return cache_dir, call_cached_git("rev-parse", "HEAD").decode().strip()
 
         cache_dir.mkdir(exist_ok=True, parents=True)
-        check_output([config.git_path, "clone", *clone_args, self.git, cache_dir])
+        check_output([config.git_path, "clone", *clone_args, str(self.git), cache_dir])
 
         call_cached_git("checkout", "--detach")
         if commit is None:

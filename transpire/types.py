@@ -29,7 +29,7 @@ class Image(BaseModel):
 
     name: str
     path: Path
-    target: str | None
+    target: str | None = Field(default=None)
 
     @property
     def resolved_path(self) -> Path:
