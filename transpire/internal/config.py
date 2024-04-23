@@ -144,7 +144,7 @@ class GitModuleConfig(ModuleConfig, BaseModel):
 
     @property
     def clean_git_url(self):
-        return self.git.removesuffix(".git") + ".git"
+        return str(self.git).removesuffix(".git") + ".git"
 
     def get_cached_repo(self, *, commit: str | None = None) -> tuple[Path, str]:
         config = CLIConfig.from_env()
