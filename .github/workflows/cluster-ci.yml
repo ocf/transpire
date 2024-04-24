@@ -34,7 +34,7 @@ jobs:
           CLONE_DIR=$(mktemp -d)
           git clone --single-branch --depth 1 git@github.com:ocf/cluster.git $CLONE_DIR
 
-          mv _out/* $CLONE_DIR
+          cp -r _out/* $CLONE_DIR
           cd $CLONE_DIR
           git config --bool core.bare false
           git config --bool push.autoSetupRemote true
