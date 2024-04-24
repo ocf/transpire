@@ -9,7 +9,7 @@ on:
 jobs:
   build-cluster:
     runs-on: ubuntu-latest
-    container: harbor.ocf.berkeley.edu/ocf/transpire/transpire:latest
+    container: ghcr.io/ocf/transpire:latest
     steps:
       - uses: actions/checkout@v3
         with:
