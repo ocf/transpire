@@ -42,5 +42,5 @@ jobs:
           git config user.name ocfbot
 
           git add -A
-          git commit -m "chore: rebuild cluster repository" -m "triggered by: ${{ inputs.module_name }}"
+          git commit -m "chore: rebuild cluster repository" -m "triggered by: ${{ inputs.module_name }}" --allow-empty
           git push
