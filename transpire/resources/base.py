@@ -12,6 +12,9 @@ class Resource(Generic[T]):
     def __init__(self):
         self.patches = []
 
+    def name(self) -> str:
+        return self.obj.metadata.name
+
     def patch(self, *fns: Callable[[dict], dict]) -> Self:
         self.patches.extend(fns)
         return self

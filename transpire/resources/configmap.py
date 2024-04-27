@@ -1,3 +1,4 @@
+from pathlib import Path
 from kubernetes import client
 
 from transpire.resources.base import Resource
@@ -19,3 +20,10 @@ class ConfigMap(Resource[client.V1ConfigMap]):
             data=data,
         )
         super().__init__()
+
+    @staticmethod
+    def from_files(name, files: list[Path]):
+        data = {}
+        for file in files:
+            data[file.name] = file.read_text()
+        return ConfigMap(name=name, data=data)
