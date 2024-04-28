@@ -52,6 +52,3 @@ class Deployment(Resource[client.V1Deployment]):
 
     def get_selector(self) -> dict[str, str]:
         return {self.SELECTOR_LABEL: self.obj.metadata.name}
-
-    def __getattr__(self, name: str) -> Any:
-        return getattr(self.pod_spec(), name)

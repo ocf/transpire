@@ -203,7 +203,7 @@ class PodSpec:
     def get_container(
         self, name: str | None = None, *, remove: bool = False
     ) -> client.V1Container:
-        container_list = self.obj.template.spec.containers
+        container_list = self.obj.containers
 
         if name is None:
             if len(container_list) != 1:
@@ -219,7 +219,7 @@ class PodSpec:
         raise ValueError(f"No such container: {name}")
 
     def add_container(self, name: str, image: str) -> Self:
-        container_list = self.obj.template.spec.containers
+        container_list = self.obj.containers
 
         names = set(c.name for c in container_list)
         if name in names:
@@ -234,7 +234,7 @@ class PodSpec:
         return self
 
     def add_arbitrary_container(self, container: client.V1Container) -> int:
-        container_list = self.obj.template.spec.containers
+        container_list = self.obj.containers
 
         names = set(c.name for c in container_list)
         if container.name in names:
