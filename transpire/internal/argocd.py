@@ -12,7 +12,7 @@ def make_app(
     if not is_valid_dnsname(app_name):
         raise ValueError(f"Expected a valid DNS name, but got {app_name} instead.")
 
-    sync_policy: dict = {"syncOptions": ["CreateNamespace=true"]}
+    sync_policy: dict = {"syncOptions": ["CreateNamespace=true", "ServerSideApply=true"]}
     if auto_sync:
         sync_policy["automated"] = {}
 
