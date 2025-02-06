@@ -6,16 +6,15 @@ import click
 from transpire.internal.cli.utils import AliasedGroup
 from transpire.internal.config import ClusterConfig, GitModuleConfig
 from transpire.types import Image, Module
-
-REGISTRY = "harbor.ocf.berkeley.edu"
+from transpire.utils import get_image_tag
 
 
 def image_metadata(config: GitModuleConfig, module: Module, image: Image):
-    base_tag = f"{REGISTRY}/ocf/{module.name}/{image.name}"
+    tag = get_image_tag(image.name, module=module)
     return {
         "tags": [
-            f"{base_tag}:latest",
-            f"{base_tag}:{module.revision}",
+            tag,  # default is tagged with module.revision
+            tag.split(":")[0] + ":latest",  # latest tag
         ],
         "labels": {
             "org.opencontainers.image.url": config.clean_git_url,

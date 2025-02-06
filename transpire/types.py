@@ -3,14 +3,21 @@ from contextvars import Context
 from functools import cached_property
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, List, TypeVar
-
+from typing import Any, Callable, List, Literal, TypeVar
+from enum import Enum
 from pydantic import BaseModel, Field
 
 from transpire.internal import context
 from transpire.manifestlike import manifests_to_dict
 
 _T = TypeVar("_T")
+
+
+class ContainerRegistry(str, Enum):
+    """Supported container registries."""
+
+    harbor = "harbor"
+    ghcr = "ghcr"
 
 
 class Version(BaseModel):
@@ -30,6 +37,7 @@ class Image(BaseModel):
     name: str
     path: Path
     target: str | None = Field(default=None)
+    registry: ContainerRegistry = Field(default=ContainerRegistry.harbor)
 
     @property
     def resolved_path(self) -> Path:
