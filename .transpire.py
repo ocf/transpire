@@ -10,4 +10,4 @@ def objects():
 
 
 def images():
-    yield Image(name="transpire", path=Path("/"))
+    yield Image(name="transpire", path=Path("/"), registry="ghcr")
