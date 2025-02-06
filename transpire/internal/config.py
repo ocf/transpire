@@ -129,7 +129,7 @@ class LocalModuleConfig(ModuleConfig, BaseModel):
 
 class GitModuleConfig(ModuleConfig, BaseModel):
     git: AnyUrl = Field(
-        description="The URL of the remote git repository the module resides in"
+        description="The URL of the remote git repository the module resides in, or path to a local repository (file://)"
     )
     branch: str | None = Field(description="The branch to deploy from", default=None)
     dir: Path = Field(

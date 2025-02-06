@@ -1,9 +1,12 @@
 import pathlib
 import tomllib
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Dict, cast
 
+from transpire.internal.config import GitModuleConfig
 from transpire.internal.context import get_app_context
-from transpire.types import Image
+from transpire.types import Image, Module, ContainerRegistry
 
 
 def get_revision() -> str | None:
@@ -16,13 +19,18 @@ def get_images() -> Dict[str, Image]:
     return {im.name: im for im in get_app_context().images}
 
 
-def get_image_tag(name: str) -> str:
+def get_image_tag(name: str, module: Module | None = None) -> str:
     """Retrieves the current Transpire module's images."""
-    module = get_app_context()
+    if module is None:
+        module = get_app_context()
     for im in module.images:
         if im.name != name:
             continue
-        return f"harbor.ocf.berkeley.edu/ocf/{module.name}/{im.name}:{module.revision}"
+        match im.registry:
+            case ContainerRegistry.ghcr:
+                return f"ghcr.io/ocf/{module.name}-{im.name}:{module.revision}"
+            case ContainerRegistry.harbor:
+                return f"harbor.ocf.berkeley.edu/ocf/{module.name}/{im.name}:{module.revision}"
     raise ValueError(f"no image with name {name}")
 
 
