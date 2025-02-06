@@ -1,12 +1,9 @@
 import pathlib
 import tomllib
-from dataclasses import dataclass
-from datetime import datetime, timezone
 from typing import Dict, cast
 
-from transpire.internal.config import GitModuleConfig
 from transpire.internal.context import get_app_context
-from transpire.types import Image, Module, ContainerRegistry
+from transpire.types import ContainerRegistry, Image, Module
 
 
 def get_revision() -> str | None:
@@ -19,8 +16,18 @@ def get_images() -> Dict[str, Image]:
     return {im.name: im for im in get_app_context().images}
 
 
-def get_image_tag(name: str, module: Module | None = None) -> str:
-    """Retrieves the current Transpire module's images."""
+def get_image_tag(
+    name: str, module: Module | None = None, collapse_image_name: bool = True
+) -> str:
+    """
+    Retrieves the current Transpire module's images.
+
+    :param name: The name of the image to retrieve.
+    :param module: The module to retrieve the image from.
+    :param collapse_image_name: Whether to combine the module and image name when they
+        are equal. Changes ocf/abc-abc to ocf/abc) when the module only includes one image
+        of the same name. This is the default behavior for GHCR.
+    """
     if module is None:
         module = get_app_context()
     for im in module.images:
@@ -28,6 +35,12 @@ def get_image_tag(name: str, module: Module | None = None) -> str:
             continue
         match im.registry:
             case ContainerRegistry.ghcr:
+                if (
+                    collapse_image_name
+                    and module.name == im.name
+                    and len(module.images) == 1
+                ):
+                    return f"ghcr.io/ocf/{module.name}:{module.revision}"
                 return f"ghcr.io/ocf/{module.name}-{im.name}:{module.revision}"
             case ContainerRegistry.harbor:
                 return f"harbor.ocf.berkeley.edu/ocf/{module.name}/{im.name}:{module.revision}"
