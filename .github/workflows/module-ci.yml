@@ -15,8 +15,6 @@ on:
         required: true
       HARBOR_PASSWORD:
         required: true
-      GHCR_PAT:
-        required: true
       OCF_CLUSTER_DEPLOY_KEY:
         required: true
   workflow_dispatch: {}
