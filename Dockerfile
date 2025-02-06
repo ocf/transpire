@@ -18,4 +18,4 @@ RUN poetry install --no-root
 
 COPY . .
 
-RUN poetry install --no-root
+RUN poetry install
