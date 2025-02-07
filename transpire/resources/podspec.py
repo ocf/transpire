@@ -1,4 +1,5 @@
 from typing import Self
+
 from kubernetes import client
 
 
@@ -95,7 +96,12 @@ class PodSpec:
         return self
 
     def with_configmap_volume(
-        self, name: str, mount_path: str, *, container_name: str | None = None, keys: list[str] | None = None
+        self,
+        name: str,
+        mount_path: str,
+        *,
+        container_name: str | None = None,
+        keys: list[str] | None = None,
     ) -> Self:
         container = self.get_container(container_name)
         if container.volume_mounts is None:
