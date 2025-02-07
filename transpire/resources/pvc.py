@@ -1,5 +1,3 @@
-from typing import Union
-
 from kubernetes import client
 
 from transpire.resources.base import Resource

@@ -1,10 +1,11 @@
 from collections.abc import Iterable
 from contextvars import Context
+from enum import Enum
 from functools import cached_property
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, List, Literal, TypeVar
-from enum import Enum
+from typing import Any, Callable, List, TypeVar
+
 from pydantic import BaseModel, Field
 
 from transpire.internal import context

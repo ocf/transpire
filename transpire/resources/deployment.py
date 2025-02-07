@@ -1,4 +1,4 @@
-from typing import Any, List, Union
+from typing import List, Union
 
 from kubernetes import client
 
