@@ -38,7 +38,7 @@ class Image(BaseModel):
     name: str
     path: Path
     target: str | None = Field(default=None)
-    registry: ContainerRegistry = Field(default=ContainerRegistry.harbor)
+    registry: ContainerRegistry = Field(default=ContainerRegistry.ghcr)
 
     @property
     def resolved_path(self) -> Path:
