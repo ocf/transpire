@@ -25,3 +25,7 @@ Here’s what we wanted out of transpire...
 ## Usage
 
 Transpire is still rapidly changing and is not (quite) ready for others to use. You will need to read source code.
+
+## Testing
+
+Run `uv run pytest -q`
