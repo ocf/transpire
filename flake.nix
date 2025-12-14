@@ -21,8 +21,6 @@
             projectDir = ./.;
             python = pkgs.python311;
             preferWheels = true;
-            checkGroups = []; # don't include dev dependencies: they don't build
-            groups = [];
           }).dependencyEnv;
           default = self.packages.${system}.transpire;
         };
