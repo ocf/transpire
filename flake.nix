@@ -18,7 +18,7 @@
       {
         packages = {
           transpire = (mkPoetryApplication {
-            projectDir = self;
+            projectDir = ./.;
             python = pkgs.python311;
             preferWheels = true;
             checkGroups = []; # don't include dev dependencies: they don't build
