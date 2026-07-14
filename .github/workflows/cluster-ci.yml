@@ -24,6 +24,7 @@ jobs:
           format('--module {0}', inputs.module_name) || '' }}
 
       - name: Push cluster repository
+      # TODO i reintroduced the problem i was trying to fix (kinda)
         run: |
           apt-get update && apt-get install -y rsync
           mkdir $HOME/.ssh
@@ -35,7 +36,8 @@ jobs:
           CLONE_DIR=$(mktemp -d)
           git clone --single-branch --depth 1 git@github.com:ocf/cluster.git $CLONE_DIR
 
-          rsync -av --delete _out/* $CLONE_DIR
+          rsync -av --delete _out/* $CLONE_DIR --exclude-dirs="base"
+          cp -r _out/base $CLONE_DIR
           cd $CLONE_DIR
           git config --bool core.bare false
           git config --bool push.autoSetupRemote true
